@@ -1,1714 +1,953 @@
+const BACKEND_URL = "https://codeai-backend-0y6t.onrender.com";
+
 const messages = document.getElementById("messages");
 const input = document.getElementById("userInput");
-const language = document.getElementById("language");
+const sendBtn = document.getElementById("sendBtn");
+const voiceBtn = document.getElementById("voiceBtn");
 
-const BACKEND_URL =
-    "https://codeai-backend-0y6t.onrender.com";
+const statusText = document.getElementById("statusText");
+const modeText = document.getElementById("modeText");
 
-const STORAGE_KEY = "codeai_chats_v2";
+const chatList = document.getElementById("chatList");
+const chatSearch = document.getElementById("chatSearch");
 
-let chats =
-    JSON.parse(
-        localStorage.getItem(STORAGE_KEY) || "[]"
-    );
+const attachmentBar = document.getElementById("attachmentBar");
+const attachmentName = document.getElementById("attachmentName");
 
-let activeChatId = null;
+const fileInput = document.getElementById("fileInput");
+const folderInput = document.getElementById("folderInput");
 
-let pendingFile = null;
+let chats = JSON.parse(
+    localStorage.getItem("codeai_chats") || "[]"
+);
 
-let cameraStream = null;
+let currentChatId = localStorage.getItem(
+    "codeai_current_chat"
+);
 
-
-/* =====================================================
-   STARTUP
-===================================================== */
-
-window.addEventListener("DOMContentLoaded", () => {
-
-    if (!chats.length) {
-        createChat(false);
-    } else {
-        activeChatId = chats[0].id;
-        loadChat(activeChatId);
-    }
-
-    renderChatList();
-
-});
+let attachedFile = null;
+let mediaStream = null;
+let recognition = null;
+let isListening = false;
 
 
-/* =====================================================
+/* ============================================================
    CHAT STORAGE
-===================================================== */
+============================================================ */
 
 function saveChats() {
 
     localStorage.setItem(
-        STORAGE_KEY,
+        "codeai_chats",
         JSON.stringify(chats)
     );
 
+    if (currentChatId) {
+        localStorage.setItem(
+            "codeai_current_chat",
+            currentChatId
+        );
+    }
 }
 
 
-function createChat(askConfirm = true) {
-
-    if (
-        askConfirm &&
-        getCurrentMessages().length > 0
-    ) {
-
-        if (
-            !confirm(
-                "Start a new chat?"
-            )
-        ) {
-            return;
-        }
-
-    }
+function createChat() {
 
     const chat = {
-
-        id:
-            Date.now().toString(),
-
-        title:
-            "New Chat",
-
-        messages: [],
-
-        createdAt:
-            Date.now(),
-
-        updatedAt:
-            Date.now()
-
+        id: Date.now().toString(),
+        title: "New Chat",
+        messages: []
     };
 
     chats.unshift(chat);
 
-    activeChatId = chat.id;
+    currentChatId = chat.id;
 
     saveChats();
 
     renderChatList();
 
-    loadChat(chat.id);
-
+    renderMessages();
 }
 
 
-function newChat() {
+function getCurrentChat() {
 
-    createChat(true);
-
+    return chats.find(
+        chat => chat.id === currentChatId
+    );
 }
 
-
-/* =====================================================
-   CHAT LIST
-===================================================== */
 
 function renderChatList() {
 
-    const list =
-        document.getElementById(
-            "chatList"
-        );
+    chatList.innerHTML = "";
 
-    const search =
-        document.getElementById(
-            "chatSearch"
-        ).value
-            .trim()
-            .toLowerCase();
-
-    list.innerHTML = "";
+    const query = chatSearch.value
+        .trim()
+        .toLowerCase();
 
     chats
         .filter(chat =>
-            chat.title
-                .toLowerCase()
-                .includes(search)
+            chat.title.toLowerCase().includes(query)
         )
         .forEach(chat => {
 
-            const row =
-                document.createElement(
-                    "div"
-                );
+            const item = document.createElement("div");
 
-            row.className =
+            item.className =
                 "chat-item" +
                 (
-                    chat.id === activeChatId
+                    chat.id === currentChatId
                         ? " active"
                         : ""
                 );
 
-            const open =
-                document.createElement(
-                    "button"
-                );
+            item.textContent = chat.title;
 
-            open.className =
-                "chat-open";
+            item.onclick = () => {
 
-            open.textContent =
-                chat.title;
+                currentChatId = chat.id;
 
-            open.onclick =
-                () => {
+                saveChats();
 
-                    activeChatId =
-                        chat.id;
+                renderChatList();
+                renderMessages();
 
-                    loadChat(chat.id);
+                closeSidebarMobile();
+            };
 
-                    renderChatList();
+            item.oncontextmenu = event => {
 
-                };
+                event.preventDefault();
 
-
-            const menu =
-                document.createElement(
-                    "button"
-                );
-
-            menu.className =
-                "chat-menu";
-
-            menu.textContent =
-                "...";
-
-            menu.onclick =
-                () => chatOptions(chat.id);
-
-
-            row.appendChild(open);
-
-            row.appendChild(menu);
-
-            list.appendChild(row);
-
-        });
-
-}
-
-
-function chatOptions(id) {
-
-    const chat =
-        chats.find(
-            item => item.id === id
-        );
-
-    if (!chat) return;
-
-    const action =
-        prompt(
-            "Type R to rename or D to delete:",
-            "R"
-        );
-
-    if (!action) return;
-
-    if (
-        action.toLowerCase() === "r"
-    ) {
-
-        const name =
-            prompt(
-                "New chat name:",
-                chat.title
-            );
-
-        if (
-            name &&
-            name.trim()
-        ) {
-
-            chat.title =
-                name.trim();
-
-            chat.updatedAt =
-                Date.now();
-
-            saveChats();
-
-            renderChatList();
-
-            if (
-                chat.id ===
-                activeChatId
-            ) {
-
-                updateChatTitle(
+                const newName = prompt(
+                    "Rename chat:",
                     chat.title
                 );
 
-            }
+                if (newName && newName.trim()) {
 
-        }
+                    chat.title = newName.trim();
 
-    }
+                    saveChats();
 
+                    renderChatList();
+                }
+            };
 
-    if (
-        action.toLowerCase() === "d"
-    ) {
+            chatList.appendChild(item);
 
-        if (
-            !confirm(
-                "Delete this chat?"
-            )
-        ) {
-            return;
-        }
-
-        chats =
-            chats.filter(
-                item =>
-                    item.id !== id
-            );
-
-        if (
-            activeChatId === id
-        ) {
-
-            if (chats.length) {
-
-                activeChatId =
-                    chats[0].id;
-
-            } else {
-
-                createChat(false);
-
-                return;
-
-            }
-
-        }
-
-        saveChats();
-
-        loadChat(activeChatId);
-
-        renderChatList();
-
-    }
-
+        });
 }
 
 
-/* =====================================================
-   LOAD CHAT
-===================================================== */
-
-function loadChat(id) {
-
-    const chat =
-        chats.find(
-            item => item.id === id
-        );
-
-    if (!chat) return;
-
-    activeChatId = id;
+function renderMessages() {
 
     messages.innerHTML = "";
 
-    updateChatTitle(
-        chat.title
-    );
+    const chat = getCurrentChat();
 
-    if (!chat.messages.length) {
+    if (!chat || chat.messages.length === 0) {
 
         showWelcome();
 
         return;
-
     }
 
-    chat.messages.forEach(
-        message => {
+    chat.messages.forEach(message => {
 
-            addMessage(
-                message.text,
-                message.type,
-                false
-            );
+        addMessageToUI(
+            message.role,
+            message.content
+        );
 
-        }
-    );
-
+    });
 }
 
 
 function showWelcome() {
 
     messages.innerHTML = `
-
         <div class="welcome">
 
-            <div class="welcome-icon">
-                &lt;/&gt;
+            <div class="welcome-orb">
+                <div></div>
             </div>
 
-            <h2>Welcome to CodeAI</h2>
+            <h2>What can I help you with?</h2>
 
             <p>
-                Ask questions, write code,
-                analyze files, read documents,
-                understand images and more.
+                Ask anything. CodeAI can understand questions,
+                files, images, PDFs and more.
             </p>
 
             <div class="suggestions">
 
-                <button onclick="useSuggestion('Explain Python loops')">
-                    Explain Python loops
+                <button data-prompt="Explain artificial intelligence simply">
+                    Explain AI simply
                 </button>
 
-                <button onclick="useSuggestion('Help me debug my code')">
-                    Debug my code
+                <button data-prompt="Help me create a Python project">
+                    Create a Python project
                 </button>
 
-                <button onclick="useSuggestion('Help me build a website')">
-                    Build a website
+                <button data-prompt="Tell me something interesting">
+                    Tell me something interesting
                 </button>
 
-                <button onclick="useSuggestion('What should I learn in JavaScript?')">
-                    Learning path
+                <button data-prompt="What can you do?">
+                    What can you do?
                 </button>
 
             </div>
 
         </div>
-
     `;
 
-}
+    document
+        .querySelectorAll("[data-prompt]")
+        .forEach(button => {
 
+            button.onclick = () => {
 
-/* =====================================================
-   CURRENT CHAT
-===================================================== */
+                input.value =
+                    button.dataset.prompt;
 
-function getCurrentChat() {
-
-    return chats.find(
-        chat =>
-            chat.id === activeChatId
-    );
-
-}
-
-
-function getCurrentMessages() {
-
-    const chat =
-        getCurrentChat();
-
-    return chat
-        ? chat.messages
-        : [];
-
-}
-
-
-function saveCurrentChat() {
-
-    const chat =
-        getCurrentChat();
-
-    if (!chat) return;
-
-    chat.updatedAt =
-        Date.now();
-
-    saveChats();
-
-    renderChatList();
-
-}
-
-
-/* =====================================================
-   SEND MESSAGE
-===================================================== */
-
-async function sendMessage() {
-
-    const text =
-        input.value.trim();
-
-    if (
-        !text &&
-        !pendingFile
-    ) {
-        return;
-    }
-
-    const chat =
-        getCurrentChat();
-
-    if (!chat) return;
-
-
-    const welcome =
-        document.querySelector(
-            ".welcome"
-        );
-
-    if (welcome) {
-        welcome.remove();
-    }
-
-
-    if (text) {
-
-        addMessage(
-            text,
-            "user"
-        );
-
-        chat.messages.push({
-            text: text,
-            type: "user"
-        });
-
-    }
-
-
-    input.value = "";
-
-
-    if (
-        chat.title === "New Chat" &&
-        text
-    ) {
-
-        chat.title =
-            makeChatTitle(text);
-
-        updateChatTitle(
-            chat.title
-        );
-
-        renderChatList();
-
-    }
-
-
-    const loading =
-        addMessage(
-            "Thinking...",
-            "ai"
-        );
-
-
-    try {
-
-        let reply;
-
-
-        /* ---------------------------------------------
-           FILE
-        --------------------------------------------- */
-
-        if (pendingFile) {
-
-            const file =
-                pendingFile;
-
-            clearAttachment();
-
-            if (
-                file.type &&
-                file.type.startsWith(
-                    "image/"
-                )
-            ) {
-
-                reply =
-                    await analyzeImage(
-                        file,
-                        text ||
-                        "Analyze this image."
-                    );
-
-            } else {
-
-                reply =
-                    await analyzeFile(
-                        file,
-                        text
-                    );
-
-            }
-
-        }
-
-
-        /* ---------------------------------------------
-           NORMAL CHAT
-        --------------------------------------------- */
-
-        else {
-
-            const response =
-                await fetch(
-                    `${BACKEND_URL}/chat`,
-                    {
-
-                        method:
-                            "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body:
-                            JSON.stringify({
-
-                                message:
-                                    text,
-
-                                language:
-                                    language.value,
-
-                                history:
-                                    chat.messages
-                                        .slice(-20)
-                                        .map(
-                                            message => ({
-
-                                                role:
-                                                    message.type ===
-                                                    "user"
-                                                        ? "user"
-                                                        : "assistant",
-
-                                                content:
-                                                    message.text
-
-                                            })
-                                        )
-
-                            })
-
-                    }
-                );
-
-
-            const raw =
-                await response.text();
-
-
-            if (!response.ok) {
-
-                throw new Error(
-                    `Backend error ${response.status}`
-                );
-
-            }
-
-
-            let data;
-
-            try {
-
-                data =
-                    JSON.parse(raw);
-
-            } catch {
-
-                throw new Error(
-                    "Backend returned invalid JSON."
-                );
-
-            }
-
-
-            if (!data.reply) {
-
-                throw new Error(
-                    "Backend did not return a reply."
-                );
-
-            }
-
-
-            reply =
-                data.reply;
-
-        }
-
-
-        loading
-            .querySelector(
-                ".bubble"
-            )
-            .innerHTML =
-            formatAIResponse(
-                reply
-            );
-
-
-        chat.messages.push({
-
-            text: reply,
-
-            type: "ai"
+                sendMessage();
+            };
 
         });
-
-
-        saveCurrentChat();
-
-
-    } catch (error) {
-
-        console.error(
-            "CODEAI ERROR:",
-            error
-        );
-
-
-        loading
-            .querySelector(
-                ".bubble"
-            )
-            .textContent =
-            "Error: " +
-            error.message;
-
-    }
-
 }
 
 
-/* =====================================================
-   ADD MESSAGE
-===================================================== */
+/* ============================================================
+   UI MESSAGES
+============================================================ */
 
-function addMessage(
-    text,
-    type,
-    save = true
-) {
+function addMessageToUI(role, text) {
 
-    const message =
-        document.createElement(
-            "div"
-        );
+    const wrapper = document.createElement("div");
 
-    message.className =
-        `message ${type}`;
+    wrapper.className =
+        `message ${role}`;
 
+    const bubble = document.createElement("div");
 
-    const bubble =
-        document.createElement(
-            "div"
-        );
+    bubble.className = "bubble";
 
-    bubble.className =
-        "bubble";
-
-
-    if (type === "ai") {
+    if (role === "assistant") {
 
         bubble.innerHTML =
             formatAIResponse(text);
 
+        addCopyButtons(bubble);
+
     } else {
 
-        bubble.textContent =
-            text;
-
+        bubble.textContent = text;
     }
 
+    wrapper.appendChild(bubble);
 
-    message.appendChild(
-        bubble
-    );
+    messages.appendChild(wrapper);
 
-    messages.appendChild(
-        message
-    );
-
-
-    messages.scrollTop =
-        messages.scrollHeight;
-
-
-    if (
-        save &&
-        type !== "ai"
-    ) {
-
-        saveCurrentChat();
-
-    }
-
-
-    return message;
-
+    messages.parentElement.scrollTop =
+        messages.parentElement.scrollHeight;
 }
 
-
-/* =====================================================
-   FORMAT RESPONSE
-===================================================== */
 
 function formatAIResponse(text) {
 
-    text =
-        escapeHTML(
-            String(text)
-        );
+    let safe = escapeHTML(text);
 
+    safe = safe.replace(
+        /```([\s\S]*?)```/g,
+        `<pre><code>$1</code></pre>`
+    );
 
-    text =
-        text.replace(
+    safe = safe.replace(
+        /\*\*(.*?)\*\*/g,
+        "<strong>$1</strong>"
+    );
 
-            /```([a-zA-Z0-9+#.-]*)\n?([\s\S]*?)```/g,
+    safe = safe.replace(
+        /\n/g,
+        "<br>"
+    );
 
-            function(
-                match,
-                lang,
-                code
-            ) {
-
-                return `
-
-                    <div class="code-block">
-
-                        <div class="code-header">
-
-                            <span>
-                                ${lang || "code"}
-                            </span>
-
-                            <button
-                                class="copy-code"
-                                onclick="copyCode(this)"
-                            >
-                                Copy
-                            </button>
-
-                        </div>
-
-                        <pre><code>${code.trim()}</code></pre>
-
-                    </div>
-
-                `;
-
-            }
-
-        );
-
-
-    text =
-        text.replace(
-            /\*\*(.*?)\*\*/g,
-            "<strong>$1</strong>"
-        );
-
-
-    text =
-        text.replace(
-            /\n/g,
-            "<br>"
-        );
-
-
-    return text;
-
+    return safe;
 }
 
-
-/* =====================================================
-   ESCAPE
-===================================================== */
 
 function escapeHTML(text) {
 
     return text
-
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-
-        .replace(
-            /</g,
-            "&lt;"
-        )
-
-        .replace(
-            />/g,
-            "&gt;"
-        )
-
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
 }
 
 
-/* =====================================================
-   COPY CODE
-===================================================== */
+function addCopyButtons(container) {
 
-function copyCode(button) {
+    container
+        .querySelectorAll("pre")
+        .forEach(pre => {
 
-    const code =
-        button
-            .closest(
-                ".code-block"
-            )
-            .querySelector(
-                "code"
-            )
-            .textContent;
+            const button =
+                document.createElement("button");
 
+            button.className = "copy-code";
 
-    navigator.clipboard.writeText(
-        code
-    );
+            button.textContent = "COPY";
 
+            button.onclick = async () => {
 
-    button.textContent =
-        "Copied";
+                const code =
+                    pre.querySelector("code");
 
+                await navigator.clipboard.writeText(
+                    code.textContent
+                );
 
-    setTimeout(
-        () => {
-            button.textContent =
-                "Copy";
-        },
-        1500
-    );
+                button.textContent = "COPIED";
 
+                setTimeout(() => {
+                    button.textContent = "COPY";
+                }, 1500);
+
+            };
+
+            pre.appendChild(button);
+        });
 }
 
 
-/* =====================================================
-   CHAT TITLE
-===================================================== */
+/* ============================================================
+   SEND MESSAGE
+============================================================ */
 
-function makeChatTitle(text) {
+async function sendMessage() {
 
-    let title =
+    const text = input.value.trim();
+
+    if (!text) return;
+
+    let chat = getCurrentChat();
+
+    if (!chat) {
+
+        createChat();
+
+        chat = getCurrentChat();
+    }
+
+
+    if (chat.messages.length === 0) {
+
+        chat.title =
+            text.length > 35
+                ? text.slice(0, 35) + "..."
+                : text;
+    }
+
+
+    chat.messages.push({
+        role: "user",
+        content: text
+    });
+
+    saveChats();
+
+    document.querySelector(".welcome")?.remove();
+
+    addMessageToUI(
+        "user",
         text
-            .replace(
-                /\s+/g,
-                " "
-            )
-            .trim();
+    );
+
+    input.value = "";
+
+    autoResize();
 
 
-    if (
-        title.length > 32
-    ) {
+    if (attachedFile) {
 
-        title =
-            title.substring(
-                0,
-                32
-            ) +
-            "...";
+        await processAttachment(
+            attachedFile,
+            chat
+        );
 
+        attachedFile = null;
+
+        hideAttachment();
     }
 
 
-    return title ||
-        "New Chat";
+    setStatus("THINKING");
 
-}
+    const thinking = addThinkingMessage();
+
+    try {
+
+        const history =
+            chat.messages
+                .slice(-20)
+                .map(item => ({
+                    role: item.role,
+                    content: item.content
+                }));
+
+        const response = await fetch(
+            `${BACKEND_URL}/chat`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    message: text,
+                    history: history.slice(0, -1)
+                })
+            }
+        );
 
 
-function updateChatTitle(title) {
+        const data = await response.json();
 
-    document.getElementById(
-        "chatTitle"
-    ).textContent =
-        title;
-
-}
+        thinking.remove();
 
 
-/* =====================================================
-   SUGGESTIONS
-===================================================== */
+        if (!response.ok) {
 
-function useSuggestion(text) {
-
-    input.value =
-        text;
-
-    input.focus();
-
-}
+            throw new Error(
+                data.detail ||
+                "AI request failed"
+            );
+        }
 
 
-/* =====================================================
-   ENTER
-===================================================== */
+        const answer =
+            data.response ||
+            "I couldn't generate a response.";
 
-function handleKey(event) {
 
-    if (
-        event.key === "Enter" &&
-        !event.shiftKey
-    ) {
+        chat.messages.push({
+            role: "assistant",
+            content: answer
+        });
 
-        event.preventDefault();
+        saveChats();
 
-        sendMessage();
+        addMessageToUI(
+            "assistant",
+            answer
+        );
 
+        renderChatList();
+
+        setStatus("ONLINE");
+
+    } catch (error) {
+
+        thinking.remove();
+
+        addMessageToUI(
+            "assistant",
+            "CodeAI error: " +
+            error.message
+        );
+
+        setStatus("ERROR");
+
+        console.error(error);
     }
-
 }
 
 
-/* =====================================================
-   TOOLS MENU
-===================================================== */
+function addThinkingMessage() {
 
-function toggleTools() {
+    const wrapper =
+        document.createElement("div");
 
-    document
-        .getElementById(
-            "toolsMenu"
-        )
-        .classList.toggle(
-            "show"
-        );
+    wrapper.className =
+        "message assistant";
 
+    wrapper.innerHTML = `
+        <div class="bubble">
+            THINKING...
+        </div>
+    `;
+
+    messages.appendChild(wrapper);
+
+    messages.parentElement.scrollTop =
+        messages.parentElement.scrollHeight;
+
+    return wrapper;
 }
 
 
-function closeTools() {
+function setStatus(text) {
 
-    document
-        .getElementById(
-            "toolsMenu"
-        )
-        .classList.remove(
-            "show"
-        );
-
+    statusText.textContent = text;
+    modeText.textContent = text;
 }
 
 
-/* =====================================================
-   FILE SELECTION
-===================================================== */
+/* ============================================================
+   FILES
+============================================================ */
 
-function selectFile() {
-
-    closeTools();
-
-    document
-        .getElementById(
-            "fileInput"
-        )
-        .click();
-
-}
+document.getElementById("fileBtn").onclick =
+    () => fileInput.click();
 
 
-function selectImage() {
-
-    closeTools();
-
-    document
-        .getElementById(
-            "imageInput"
-        )
-        .click();
-
-}
+document.getElementById("folderBtn").onclick =
+    () => folderInput.click();
 
 
-function selectFolder() {
+fileInput.onchange = () => {
 
-    closeTools();
-
-    document
-        .getElementById(
-            "folderInput"
-        )
-        .click();
-
-}
-
-
-/* =====================================================
-   FILE HANDLING
-===================================================== */
-
-function handleFile(event) {
-
-    const file =
-        event.target.files[0];
+    const file = fileInput.files[0];
 
     if (!file) return;
 
-    pendingFile =
-        file;
+    attachedFile = file;
 
-    showAttachment(
-        file.name
-    );
+    attachmentName.textContent =
+        file.name;
 
-}
-
-
-function handleImage(event) {
-
-    const file =
-        event.target.files[0];
-
-    if (!file) return;
-
-    pendingFile =
-        file;
-
-    showAttachment(
-        file.name
-    );
-
-}
+    attachmentBar.classList.add("show");
+};
 
 
-async function handleFolder(event) {
+folderInput.onchange = async () => {
 
-    const files =
-        Array.from(
-            event.target.files
+    const files = [...folderInput.files];
+
+    if (!files.length) return;
+
+    setStatus("READING");
+
+    try {
+
+        const formData = new FormData();
+
+        files.forEach(file => {
+            formData.append(
+                "files",
+                file,
+                file.webkitRelativePath || file.name
+            );
+        });
+
+        const response = await fetch(
+            `${BACKEND_URL}/read-files`,
+            {
+                method: "POST",
+                body: formData
+            }
         );
 
-    if (!files.length) {
-        return;
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.detail || "Folder reading failed"
+            );
+        }
+
+        input.value =
+            "Analyze this selected folder:\n\n" +
+            data.combined_text;
+
+        setStatus("ONLINE");
+
+        autoResize();
+
+    } catch (error) {
+
+        setStatus("ERROR");
+
+        alert(error.message);
     }
+};
 
 
-    closeTools();
+document.getElementById("removeAttachment").onclick =
+    () => {
+
+        attachedFile = null;
+
+        fileInput.value = "";
+
+        hideAttachment();
+    };
 
 
-    const chat =
-        getCurrentChat();
+function hideAttachment() {
+
+    attachmentBar.classList.remove("show");
+}
 
 
-    addMessage(
-        `Selected ${files.length} files.`,
-        "user"
-    );
+/* ============================================================
+   FILE PROCESSING
+============================================================ */
 
+async function processAttachment(file, chat) {
 
-    const loading =
-        addMessage(
-            "Reading files...",
-            "ai"
-        );
-
+    setStatus("READING");
 
     try {
 
         const formData =
             new FormData();
 
-
-        files.forEach(
-            file => {
-
-                formData.append(
-                    "files",
-                    file
-                );
-
-            }
+        formData.append(
+            "file",
+            file
         );
-
 
         const response =
             await fetch(
-                `${BACKEND_URL}/read-files`,
+                `${BACKEND_URL}/read-file`,
                 {
-
                     method: "POST",
-
                     body: formData
-
                 }
             );
-
 
         const data =
             await response.json();
 
-
-        if (
-            !response.ok
-        ) {
+        if (!response.ok) {
 
             throw new Error(
-                "Could not read folder."
+                data.detail ||
+                "File reading failed"
             );
-
         }
 
-
         const fileText =
-            data.files
-                .map(
-                    file =>
-                        `FILE: ${file.filename}\n${file.text}`
-                )
-                .join(
-                    "\n\n"
+            data.text ||
+            "";
+
+        chat.messages.push({
+            role: "user",
+            content:
+                `File: ${file.name}\n\n${fileText}`
+        });
+
+        addMessageToUI(
+            "user",
+            `Attached: ${file.name}`
+        );
+
+        saveChats();
+
+    } catch (error) {
+
+        addMessageToUI(
+            "assistant",
+            "File error: " +
+            error.message
+        );
+    }
+
+    setStatus("ONLINE");
+}
+
+
+/* ============================================================
+   PDF
+============================================================ */
+
+const pdfModal =
+    document.getElementById("pdfModal");
+
+document.getElementById("pdfBtn").onclick =
+    () => pdfModal.classList.remove("hidden");
+
+
+document.getElementById("closePdf").onclick =
+    () => pdfModal.classList.add("hidden");
+
+
+document.getElementById("createPdfBtn").onclick =
+    async () => {
+
+        const title =
+            document.getElementById("pdfTitle")
+                .value.trim();
+
+        const content =
+            document.getElementById("pdfContent")
+                .value.trim();
+
+        if (!content) {
+
+            alert(
+                "Write something for the PDF first."
+            );
+
+            return;
+        }
+
+        setStatus("CREATING PDF");
+
+        try {
+
+            const response =
+                await fetch(
+                    `${BACKEND_URL}/create-pdf`,
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            title:
+                                title ||
+                                "CodeAI Document",
+
+                            content
+                        })
+                    }
                 );
 
+            if (!response.ok) {
 
-        const answer =
-            await askAIWithContext(
+                const error =
+                    await response.json();
 
-                "Analyze this project folder. Explain its structure, important files, possible problems, and useful improvements.\n\n" +
-                fileText
-
-            );
-
-
-        loading
-            .querySelector(
-                ".bubble"
-            )
-            .innerHTML =
-            formatAIResponse(
-                answer
-            );
-
-
-        chat.messages.push({
-
-            text:
-                `Selected ${files.length} files.`,
-
-            type:
-                "user"
-
-        });
-
-
-        chat.messages.push({
-
-            text:
-                answer,
-
-            type:
-                "ai"
-
-        });
-
-
-        saveCurrentChat();
-
-
-    } catch (error) {
-
-        loading
-            .querySelector(
-                ".bubble"
-            )
-            .textContent =
-            "Error: " +
-            error.message;
-
-    }
-
-}
-
-
-/* =====================================================
-   FILE ANALYSIS
-===================================================== */
-
-async function analyzeFile(
-    file,
-    question
-) {
-
-    const formData =
-        new FormData();
-
-    formData.append(
-        "file",
-        file
-    );
-
-
-    const response =
-        await fetch(
-            `${BACKEND_URL}/read-file`,
-            {
-
-                method: "POST",
-
-                body: formData
-
+                throw new Error(
+                    error.detail ||
+                    "PDF creation failed"
+                );
             }
-        );
 
+            const blob =
+                await response.blob();
 
-    const data =
-        await response.json();
+            const url =
+                URL.createObjectURL(blob);
 
+            const a =
+                document.createElement("a");
 
-    if (!response.ok) {
+            a.href = url;
 
-        throw new Error(
-            "Could not read file."
-        );
+            a.download =
+                (title ||
+                    "CodeAI Document") +
+                ".pdf";
 
-    }
+            a.click();
 
+            URL.revokeObjectURL(url);
 
-    if (
-        data.type ===
-        "unsupported"
-    ) {
+            pdfModal.classList.add("hidden");
 
-        return data.message;
+            setStatus("ONLINE");
 
-    }
+        } catch (error) {
 
+            setStatus("ERROR");
 
-    const prompt =
+            alert(error.message);
+        }
+    };
 
-        question ||
 
-        "Summarize and explain this file.";
-
-    return await askAIWithContext(
-
-        `${prompt}
-
-Filename: ${data.filename}
-
-File contents:
-
-${data.text}`
-
-    );
-
-}
-
-
-/* =====================================================
-   IMAGE ANALYSIS
-===================================================== */
-
-async function analyzeImage(
-    file,
-    question
-) {
-
-    const formData =
-        new FormData();
-
-
-    formData.append(
-        "file",
-        file
-    );
-
-
-    formData.append(
-        "question",
-        question ||
-        "Analyze this image and explain what you can see."
-    );
-
-
-    const response =
-        await fetch(
-            `${BACKEND_URL}/vision`,
-            {
-
-                method: "POST",
-
-                body: formData
-
-            }
-        );
-
-
-    const data =
-        await response.json();
-
-
-    if (!response.ok) {
-
-        throw new Error(
-            "Image analysis failed."
-        );
-
-    }
-
-
-    return data.reply;
-
-}
-
-
-/* =====================================================
-   ASK AI WITH FILE CONTEXT
-===================================================== */
-
-async function askAIWithContext(
-    context
-) {
-
-    const chat =
-        getCurrentChat();
-
-
-    const response =
-        await fetch(
-            `${BACKEND_URL}/chat`,
-            {
-
-                method:
-                    "POST",
-
-                headers: {
-                    "Content-Type":
-                        "application/json"
-                },
-
-                body:
-                    JSON.stringify({
-
-                        message:
-                            context,
-
-                        language:
-                            language.value,
-
-                        history:
-                            chat.messages
-                                .slice(-20)
-                                .map(
-                                    message => ({
-
-                                        role:
-                                            message.type ===
-                                            "user"
-                                                ? "user"
-                                                : "assistant",
-
-                                        content:
-                                            message.text
-
-                                    })
-                                )
-
-                    })
-
-            }
-        );
-
-
-    const data =
-        await response.json();
-
-
-    if (!response.ok) {
-
-        throw new Error(
-            "AI request failed."
-        );
-
-    }
-
-
-    return data.reply;
-
-}
-
-
-/* =====================================================
-   ATTACHMENT UI
-===================================================== */
-
-function showAttachment(
-    filename
-) {
-
-    const preview =
-        document.getElementById(
-            "attachmentPreview"
-        );
-
-
-    preview.innerHTML = `
-
-        <div class="attachment">
-
-            <span>${escapeHTML(filename)}</span>
-
-            <button
-                onclick="clearAttachment()"
-            >
-                Remove
-            </button>
-
-        </div>
-
-    `;
-
-
-    preview.classList.add(
-        "show"
-    );
-
-}
-
-
-function clearAttachment() {
-
-    pendingFile =
-        null;
-
-
-    document.getElementById(
-        "attachmentPreview"
-    ).classList.remove(
-        "show"
-    );
-
-
-    document.getElementById(
-        "fileInput"
-    ).value = "";
-
-
-    document.getElementById(
-        "imageInput"
-    ).value = "";
-
-}
-
-
-/* =====================================================
+/* ============================================================
    CAMERA
-===================================================== */
+============================================================ */
 
-async function openCamera() {
+const cameraModal =
+    document.getElementById("cameraModal");
 
-    closeTools();
+const cameraVideo =
+    document.getElementById("cameraVideo");
 
+document.getElementById("cameraBtn").onclick =
+    async () => {
 
-    const modal =
-        document.getElementById(
-            "cameraModal"
-        );
+        try {
 
+            mediaStream =
+                await navigator.mediaDevices
+                    .getUserMedia({
+                        video: true,
+                        audio: false
+                    });
 
-    const video =
-        document.getElementById(
-            "cameraVideo"
-        );
+            cameraVideo.srcObject =
+                mediaStream;
 
+            cameraModal.classList.remove(
+                "hidden"
+            );
 
-    try {
+        } catch (error) {
 
-        cameraStream =
-            await navigator.mediaDevices
-                .getUserMedia({
-
-                    video: true,
-
-                    audio: false
-
-                });
-
-
-        video.srcObject =
-            cameraStream;
-
-
-        modal.classList.add(
-            "show"
-        );
+            alert(
+                "Camera permission was denied or unavailable."
+            );
+        }
+    };
 
 
-    } catch (error) {
-
-        alert(
-            "Camera permission was not available."
-        );
-
-    }
-
-}
+document.getElementById("closeCamera").onclick =
+    closeCamera;
 
 
 function closeCamera() {
 
-    const modal =
-        document.getElementById(
-            "cameraModal"
-        );
+    cameraModal.classList.add("hidden");
 
+    if (mediaStream) {
 
-    modal.classList.remove(
-        "show"
-    );
-
-
-    if (cameraStream) {
-
-        cameraStream
+        mediaStream
             .getTracks()
-            .forEach(
-                track =>
-                    track.stop()
+            .forEach(track =>
+                track.stop()
             );
 
-        cameraStream =
-            null;
-
+        mediaStream = null;
     }
-
 }
 
 
-function capturePhoto() {
+document.getElementById("captureBtn").onclick =
+    async () => {
 
-    const video =
-        document.getElementById(
-            "cameraVideo"
+        const canvas =
+            document.getElementById(
+                "cameraCanvas"
+            );
+
+        canvas.width =
+            cameraVideo.videoWidth;
+
+        canvas.height =
+            cameraVideo.videoHeight;
+
+        const ctx =
+            canvas.getContext("2d");
+
+        ctx.drawImage(
+            cameraVideo,
+            0,
+            0
         );
 
+        const image =
+            canvas.toDataURL(
+                "image/jpeg",
+                .85
+            );
 
-    const canvas =
-        document.getElementById(
-            "cameraCanvas"
-        );
+        closeCamera();
 
+        setStatus("ANALYZING");
 
-    canvas.width =
-        video.videoWidth;
+        try {
 
-
-    canvas.height =
-        video.videoHeight;
-
-
-    const context =
-        canvas.getContext(
-            "2d"
-        );
-
-
-    context.drawImage(
-        video,
-        0,
-        0
-    );
-
-
-    canvas.toBlob(
-        blob => {
-
-            if (!blob) return;
-
-
-            pendingFile =
-                new File(
-                    [blob],
-                    "camera-photo.jpg",
+            const response =
+                await fetch(
+                    `${BACKEND_URL}/vision`,
                     {
-                        type:
-                            "image/jpeg"
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            image,
+                            prompt:
+                                "Analyze what is visible in this camera image. Be accurate and concise."
+                        })
                     }
                 );
 
+            const data =
+                await response.json();
 
-            showAttachment(
-                "camera-photo.jpg"
+            if (!response.ok) {
+
+                throw new Error(
+                    data.detail ||
+                    "Vision failed"
+                );
+            }
+
+            addMessageToUI(
+                "assistant",
+                data.response
             );
 
+            setStatus("ONLINE");
 
-            closeCamera();
+        } catch (error) {
 
-        },
+            setStatus("ERROR");
 
-        "image/jpeg",
-
-        0.9
-    );
-
-}
+            alert(error.message);
+        }
+    };
 
 
-/* =====================================================
-   MICROPHONE
-===================================================== */
+/* ============================================================
+   VOICE
+============================================================ */
 
-function startVoiceInput() {
-
-    const SpeechRecognition =
-        window.SpeechRecognition ||
-        window.webkitSpeechRecognition;
+const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
 
 
-    if (!SpeechRecognition) {
+if (SpeechRecognition) {
 
-        alert(
-            "Voice input is not supported by this browser."
-        );
-
-        return;
-
-    }
-
-
-    const recognition =
+    recognition =
         new SpeechRecognition();
 
-
     recognition.lang =
-        "en-IN";
+        navigator.language || "en-US";
+
+    recognition.continuous = false;
+
+    recognition.interimResults = true;
 
 
-    recognition.interimResults =
-        true;
+    recognition.onstart = () => {
 
+        isListening = true;
 
-    recognition.continuous =
-        false;
+        voiceBtn.classList.add(
+            "listening"
+        );
+
+        input.placeholder =
+            "LISTENING";
+
+        setStatus("LISTENING");
+    };
 
 
     recognition.onresult =
         event => {
 
-            let result = "";
+            let transcript = "";
 
             for (
                 let i = event.resultIndex;
@@ -1716,204 +955,240 @@ function startVoiceInput() {
                 i++
             ) {
 
-                result +=
+                transcript +=
                     event.results[i][0]
                         .transcript;
-
             }
 
             input.value =
-                result;
+                transcript;
 
+            autoResize();
         };
+
+
+    recognition.onend = () => {
+
+        isListening = false;
+
+        voiceBtn.classList.remove(
+            "listening"
+        );
+
+        input.placeholder =
+            "Ask CodeAI anything...";
+
+        setStatus("READY");
+
+        if (input.value.trim()) {
+            sendMessage();
+        }
+    };
 
 
     recognition.onerror =
-        event => {
+        error => {
 
             console.error(
-                "VOICE ERROR:",
-                event.error
+                "Speech error:",
+                error
             );
 
+            isListening = false;
+
+            voiceBtn.classList.remove(
+                "listening"
+            );
+
+            input.placeholder =
+                "Ask CodeAI anything...";
+
+            setStatus("ERROR");
         };
 
 
-    recognition.start();
+    voiceBtn.onclick = () => {
 
-}
+        if (isListening) {
 
+            recognition.stop();
 
-/* =====================================================
-   CREATE PDF
-===================================================== */
+        } else {
 
-async function createPDFFromChat() {
-
-    closeTools();
-
-
-    const chat =
-        getCurrentChat();
-
-
-    if (
-        !chat ||
-        !chat.messages.length
-    ) {
-
-        alert(
-            "There is no conversation to create a PDF from."
-        );
-
-        return;
-
-    }
-
-
-    try {
-
-        const content =
-            chat.messages
-                .map(
-                    message =>
-                        `${message.type === "user" ? "User" : "CodeAI"}:\n${message.text}`
-                )
-                .join(
-                    "\n\n"
-                );
-
-
-        const response =
-            await fetch(
-                `${BACKEND_URL}/create-pdf`,
-                {
-
-                    method:
-                        "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify({
-
-                            title:
-                                chat.title,
-
-                            content:
-                                content
-
-                        })
-
-                    }
-
-                );
-
-        if (!response.ok) {
-
-            throw new Error(
-                "PDF creation failed."
-            );
-
+            recognition.start();
         }
+    };
 
+} else {
 
-        const blob =
-            await response.blob();
-
-
-        const url =
-            URL.createObjectURL(
-                blob
-            );
-
-
-        const link =
-            document.createElement(
-                "a"
-            );
-
-
-        link.href =
-            url;
-
-
-        link.download =
-            `${safeFilename(chat.title)}.pdf`;
-
-
-        document.body.appendChild(
-            link
-        );
-
-
-        link.click();
-
-
-        link.remove();
-
-
-        URL.revokeObjectURL(
-            url
-        );
-
-
-    } catch (error) {
+    voiceBtn.onclick = () => {
 
         alert(
-            error.message
+            "Voice recognition is not supported in this browser."
         );
-
-    }
-
+    };
 }
 
 
-/* =====================================================
-   SAFE FILENAME
-===================================================== */
+/* ============================================================
+   MASTER PLAN
+============================================================ */
 
-function safeFilename(name) {
-
-    return name
-        .replace(
-            /[<>:"/\\|?*]/g,
-            "_"
-        )
-        .trim() ||
-        "CodeAI_Chat";
-
-}
+const plansModal =
+    document.getElementById("plansModal");
 
 
-/* =====================================================
-   MOBILE SIDEBAR
-===================================================== */
-
-function toggleSidebar() {
-
-    document
-        .getElementById(
-            "sidebar"
-        )
-        .classList.toggle(
-            "open"
-        );
-
-}
-
-
-/* =====================================================
-   ABOUT
-===================================================== */
-
-function showAbout() {
-
-    alert(
-        "CodeAI\n\nAn AI assistant created by VARAD WANSAGAR."
+document.getElementById("plansBtn").onclick =
+    () => plansModal.classList.remove(
+        "hidden"
     );
 
+
+document.getElementById("topPlanBtn").onclick =
+    () => plansModal.classList.remove(
+        "hidden"
+    );
+
+
+document.getElementById("closePlans").onclick =
+    () => plansModal.classList.add(
+        "hidden"
+    );
+
+
+document.getElementById("subscribeBtn").onclick =
+    () => {
+
+        alert(
+            "Master payment is not connected yet. The payment gateway will be added next."
+        );
+
+    };
+
+
+/* ============================================================
+   SETTINGS
+============================================================ */
+
+const settingsModal =
+    document.getElementById(
+        "settingsModal"
+    );
+
+
+document.getElementById("settingsBtn").onclick =
+    () => settingsModal.classList.remove(
+        "hidden"
+    );
+
+
+document.getElementById("closeSettings").onclick =
+    () => settingsModal.classList.add(
+        "hidden"
+    );
+
+
+/* ============================================================
+   NEW CHAT
+============================================================ */
+
+document.getElementById("newChatBtn").onclick =
+    createChat;
+
+
+/* ============================================================
+   SEARCH
+============================================================ */
+
+chatSearch.oninput =
+    renderChatList;
+
+
+/* ============================================================
+   ENTER / RESIZE
+============================================================ */
+
+input.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Enter" &&
+            !event.shiftKey
+        ) {
+
+            event.preventDefault();
+
+            sendMessage();
+        }
+    }
+);
+
+
+input.addEventListener(
+    "input",
+    autoResize
+);
+
+
+function autoResize() {
+
+    input.style.height =
+        "auto";
+
+    input.style.height =
+        Math.min(
+            input.scrollHeight,
+            150
+        ) + "px";
 }
+
+
+sendBtn.onclick =
+    sendMessage;
+
+
+/* ============================================================
+   MOBILE SIDEBAR
+============================================================ */
+
+document.getElementById("mobileMenu")
+    .onclick = () => {
+
+        document
+            .getElementById("sidebar")
+            .classList.toggle("open");
+    };
+
+
+function closeSidebarMobile() {
+
+    document
+        .getElementById("sidebar")
+        .classList.remove("open");
+}
+
+
+/* ============================================================
+   INIT
+============================================================ */
+
+if (!chats.length) {
+
+    createChat();
+
+} else {
+
+    if (
+        !currentChatId ||
+        !getCurrentChat()
+    ) {
+        currentChatId =
+            chats[0].id;
+    }
+
+    renderChatList();
+    renderMessages();
+}
+
+saveChats();

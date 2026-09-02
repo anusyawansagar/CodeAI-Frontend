@@ -13,114 +13,114 @@
 
 <div class="app">
 
+    <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
 
         <div class="brand">
-            <div class="logo">&lt;/&gt;</div>
+            <div class="brand-orb"></div>
 
             <div>
-                <h2>CodeAI</h2>
-                <span>AI Assistant</span>
+                <h1>CodeAI</h1>
+                <span>AI SYSTEM</span>
             </div>
         </div>
 
-        <button class="new-chat" onclick="newChat()">
-            + New Chat
+        <button class="new-chat" id="newChatBtn">
+            <span>+</span>
+            New Chat
         </button>
 
-        <div class="chat-search">
+        <div class="search-box">
             <input
                 id="chatSearch"
                 type="text"
                 placeholder="Search chats..."
-                oninput="renderChatList()"
             >
         </div>
 
         <div class="chat-list" id="chatList"></div>
 
-        <div class="sidebar-section">
-
-            <p>MODE</p>
-
-            <select id="language">
-                <option>General</option>
-                <option>Python</option>
-                <option>JavaScript</option>
-                <option>HTML</option>
-                <option>CSS</option>
-                <option>C</option>
-                <option>C++</option>
-                <option>Java</option>
-                <option>Rust</option>
-                <option>SQL</option>
-            </select>
-
-        </div>
-
         <div class="sidebar-bottom">
-            <button onclick="showAbout()">Settings</button>
-            <button onclick="showAbout()">About CodeAI</button>
+
+            <button id="plansBtn">
+                <span>◈</span>
+                Master Plan
+            </button>
+
+            <button id="settingsBtn">
+                <span>⚙</span>
+                Settings
+            </button>
+
         </div>
 
     </aside>
 
 
-    <main class="chat">
+    <!-- MAIN -->
+    <main class="main">
 
         <header class="topbar">
 
-            <button
-                class="mobile-menu"
-                onclick="toggleSidebar()"
-                aria-label="Menu"
-            >
+            <button class="mobile-menu" id="mobileMenu">
                 ☰
             </button>
 
-            <div>
-                <h1 id="chatTitle">CodeAI</h1>
-                <p>Intelligent AI assistant</p>
+            <div class="top-title">
+
+                <div class="status-dot"></div>
+
+                <div>
+                    <strong>CodeAI</strong>
+                    <small id="statusText">ONLINE</small>
+                </div>
+
             </div>
 
-            <div class="status">
-                <span></span>
-                Online
-            </div>
+            <button class="plan-pill" id="topPlanBtn">
+                FREE
+            </button>
 
         </header>
 
 
-        <section id="messages" class="messages">
+        <!-- CHAT -->
+        <section class="chat-area">
 
-            <div class="welcome">
+            <div class="messages" id="messages">
 
-                <div class="welcome-icon">&lt;/&gt;</div>
+                <div class="welcome" id="welcome">
 
-                <h2>Welcome to CodeAI</h2>
+                    <div class="welcome-orb">
+                        <div></div>
+                    </div>
 
-                <p>
-                    Ask questions, write code, analyze files,
-                    read documents, understand images and more.
-                </p>
+                    <h2>What can I help you with?</h2>
 
-                <div class="suggestions">
+                    <p>
+                        Ask anything. CodeAI can understand questions,
+                        files, images, PDFs and more.
+                    </p>
 
-                    <button onclick="useSuggestion('Explain Python loops')">
-                        Explain Python loops
-                    </button>
+                    <div class="suggestions">
 
-                    <button onclick="useSuggestion('Help me debug my code')">
-                        Debug my code
-                    </button>
+                        <button data-prompt="Explain artificial intelligence simply">
+                            Explain AI simply
+                        </button>
 
-                    <button onclick="useSuggestion('Help me build a website')">
-                        Build a website
-                    </button>
+                        <button data-prompt="Help me create a Python project">
+                            Create a Python project
+                        </button>
 
-                    <button onclick="useSuggestion('What should I learn in JavaScript?')">
-                        Learning path
-                    </button>
+                        <button data-prompt="Tell me something interesting">
+                            Tell me something interesting
+                        </button>
+
+                        <button data-prompt="What can you do?">
+                            What can you do?
+                        </button>
+
+                    </div>
 
                 </div>
 
@@ -129,152 +129,305 @@
         </section>
 
 
-        <div class="bottom-area">
+        <!-- ATTACHMENT PREVIEW -->
+        <div class="attachment-bar" id="attachmentBar">
 
-            <div id="attachmentPreview" class="attachment-preview"></div>
+            <div id="attachmentName"></div>
 
-            <div class="input-area">
-
-                <div class="input-box">
-
-                    <button
-                        id="attachButton"
-                        class="tool-button"
-                        onclick="toggleTools()"
-                        title="Tools"
-                    >
-                        +
-                    </button>
-
-                    <textarea
-                        id="userInput"
-                        placeholder="Ask CodeAI anything..."
-                        rows="1"
-                        onkeydown="handleKey(event)"
-                    ></textarea>
-
-                    <button
-                        id="micButton"
-                        class="tool-button"
-                        onclick="startVoiceInput()"
-                        title="Voice input"
-                    >
-                        Mic
-                    </button>
-
-                    <button
-                        id="sendButton"
-                        onclick="sendMessage()"
-                    >
-                        ➤
-                    </button>
-
-                </div>
-
-                <p class="disclaimer">
-                    CodeAI can make mistakes. Check important information.
-                </p>
-
-            </div>
-
-
-            <div id="toolsMenu" class="tools-menu">
-
-                <button onclick="selectFile()">
-                    Upload File
-                </button>
-
-                <button onclick="selectFolder()">
-                    Upload Folder
-                </button>
-
-                <button onclick="selectImage()">
-                    Upload Image
-                </button>
-
-                <button onclick="openCamera()">
-                    Take Photo
-                </button>
-
-                <button onclick="createPDFFromChat()">
-                    Create PDF
-                </button>
-
-            </div>
-
-
-            <input
-                id="fileInput"
-                type="file"
-                hidden
-                onchange="handleFile(event)"
-            >
-
-            <input
-                id="imageInput"
-                type="file"
-                accept="image/*"
-                hidden
-                onchange="handleImage(event)"
-            >
-
-            <input
-                id="folderInput"
-                type="file"
-                webkitdirectory
-                directory
-                multiple
-                hidden
-                onchange="handleFolder(event)"
-            >
-
-
-            <div class="ad-container">
-
-                <span class="ad-label">
-                    ADVERTISEMENT
-                </span>
-
-                <div class="ad-box">
-                    <p>Advertisement</p>
-                </div>
-
-            </div>
+            <button id="removeAttachment">
+                ×
+            </button>
 
         </div>
+
+
+        <!-- COMPOSER -->
+        <section class="composer">
+
+            <div class="composer-tools">
+
+                <button
+                    class="tool-button"
+                    id="fileBtn"
+                    title="Upload file"
+                >
+                    +
+                </button>
+
+                <input
+                    type="file"
+                    id="fileInput"
+                    hidden
+                >
+
+                <input
+                    type="file"
+                    id="folderInput"
+                    webkitdirectory
+                    directory
+                    multiple
+                    hidden
+                >
+
+                <button
+                    class="tool-button"
+                    id="folderBtn"
+                    title="Upload folder"
+                >
+                    □
+                </button>
+
+                <button
+                    class="tool-button"
+                    id="cameraBtn"
+                    title="Camera"
+                >
+                    ◉
+                </button>
+
+                <button
+                    class="tool-button"
+                    id="pdfBtn"
+                    title="Create PDF"
+                >
+                    PDF
+                </button>
+
+            </div>
+
+
+            <div class="input-shell">
+
+                <textarea
+                    id="userInput"
+                    placeholder="Ask CodeAI anything..."
+                    rows="1"
+                ></textarea>
+
+
+                <button
+                    class="voice-button"
+                    id="voiceBtn"
+                    title="Voice"
+                >
+                    <span class="voice-ring"></span>
+                    <span class="voice-core"></span>
+                </button>
+
+
+                <button
+                    class="send-button"
+                    id="sendBtn"
+                >
+                    →
+                </button>
+
+            </div>
+
+
+            <div class="composer-footer">
+                <span id="modeText">READY</span>
+                <span>CodeAI 3.0</span>
+            </div>
+
+        </section>
 
     </main>
 
 </div>
 
 
-<div id="cameraModal" class="camera-modal">
+<!-- CAMERA MODAL -->
 
-    <div class="camera-panel">
+<div class="modal hidden" id="cameraModal">
 
-        <h3>Camera</h3>
+    <div class="modal-card camera-card">
 
-        <video
-            id="cameraVideo"
-            autoplay
-            playsinline
-        ></video>
+        <div class="modal-header">
+            <h3>Camera Vision</h3>
 
-        <canvas
-            id="cameraCanvas"
-            hidden
-        ></canvas>
+            <button id="closeCamera">
+                ×
+            </button>
+        </div>
 
-        <div class="camera-buttons">
+        <video id="cameraVideo" autoplay playsinline></video>
 
-            <button onclick="closeCamera()">
-                Cancel
+        <button class="capture-button" id="captureBtn">
+            CAPTURE
+        </button>
+
+        <canvas id="cameraCanvas" hidden></canvas>
+
+    </div>
+
+</div>
+
+
+<!-- MASTER PLAN MODAL -->
+
+<div class="modal hidden" id="plansModal">
+
+    <div class="modal-card plans-card">
+
+        <div class="modal-header">
+
+            <div>
+                <span class="modal-label">CODEAI</span>
+                <h2>Choose your plan</h2>
+            </div>
+
+            <button id="closePlans">
+                ×
             </button>
 
-            <button onclick="capturePhoto()">
-                Capture
+        </div>
+
+
+        <div class="plans">
+
+            <div class="plan-card">
+
+                <div class="plan-name">
+                    FREE
+                </div>
+
+                <div class="price">
+                    ₹0
+                    <small>/month</small>
+                </div>
+
+                <div class="features">
+
+                    <p>5 image generations/day</p>
+                    <p>3 video generations/day</p>
+                    <p>Basic AI</p>
+                    <p>Ads supported</p>
+
+                </div>
+
+                <button class="plan-button disabled">
+                    CURRENT PLAN
+                </button>
+
+            </div>
+
+
+            <div class="plan-card master">
+
+                <div class="master-tag">
+                    MASTER
+                </div>
+
+                <div class="plan-name">
+                    MASTER
+                </div>
+
+                <div class="price">
+                    ₹20
+                    <small>/month</small>
+                </div>
+
+                <div class="features">
+
+                    <p>50 image generations/day</p>
+                    <p>10 video generations/day</p>
+                    <p>Advanced audio tools</p>
+                    <p>Video editor</p>
+                    <p>Maximum video: 2 minutes</p>
+                    <p>No ads</p>
+
+                </div>
+
+                <button
+                    class="plan-button"
+                    id="subscribeBtn"
+                >
+                    GET MASTER
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="payment-note">
+            Payment gateway will be connected here.
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- PDF MODAL -->
+
+<div class="modal hidden" id="pdfModal">
+
+    <div class="modal-card">
+
+        <div class="modal-header">
+
+            <h3>Create PDF</h3>
+
+            <button id="closePdf">
+                ×
             </button>
 
+        </div>
+
+        <input
+            id="pdfTitle"
+            class="modal-input"
+            placeholder="PDF title"
+        >
+
+        <textarea
+            id="pdfContent"
+            class="pdf-content"
+            placeholder="Write exactly what you want inside the PDF..."
+        ></textarea>
+
+        <button
+            class="primary-button"
+            id="createPdfBtn"
+        >
+            CREATE PDF
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- SETTINGS MODAL -->
+
+<div class="modal hidden" id="settingsModal">
+
+    <div class="modal-card">
+
+        <div class="modal-header">
+
+            <h3>Settings</h3>
+
+            <button id="closeSettings">
+                ×
+            </button>
+
+        </div>
+
+        <div class="settings-item">
+            <span>CodeAI version</span>
+            <strong>3.0.0</strong>
+        </div>
+
+        <div class="settings-item">
+            <span>Creator</span>
+            <strong>VARAD WANSAGAR</strong>
+        </div>
+
+        <div class="settings-item">
+            <span>Theme</span>
+            <strong>Pure Black</strong>
         </div>
 
     </div>
