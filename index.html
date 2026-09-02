@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>CodeAI — Coding Assistant</title>
+    <title>CodeAI</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -13,32 +13,38 @@
 
 <div class="app">
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
 
         <div class="brand">
-
             <div class="logo">&lt;/&gt;</div>
 
             <div>
                 <h2>CodeAI</h2>
-                <span>Coding Assistant</span>
+                <span>AI Assistant</span>
             </div>
-
         </div>
-
 
         <button class="new-chat" onclick="newChat()">
             + New Chat
         </button>
 
+        <div class="chat-search">
+            <input
+                id="chatSearch"
+                type="text"
+                placeholder="Search chats..."
+                oninput="renderChatList()"
+            >
+        </div>
+
+        <div class="chat-list" id="chatList"></div>
 
         <div class="sidebar-section">
 
-            <p>LANGUAGE</p>
+            <p>MODE</p>
 
             <select id="language">
-
+                <option>General</option>
                 <option>Python</option>
                 <option>JavaScript</option>
                 <option>HTML</option>
@@ -48,183 +54,230 @@
                 <option>Java</option>
                 <option>Rust</option>
                 <option>SQL</option>
-
             </select>
 
         </div>
 
-
         <div class="sidebar-bottom">
-
-            <button>⚙ Settings</button>
-
-            <button>ℹ About CodeAI</button>
-
+            <button onclick="showAbout()">Settings</button>
+            <button onclick="showAbout()">About CodeAI</button>
         </div>
 
     </aside>
 
 
-
-    <!-- MAIN CHAT -->
     <main class="chat">
 
-
-        <!-- TOP BAR -->
         <header class="topbar">
 
+            <button
+                class="mobile-menu"
+                onclick="toggleSidebar()"
+                aria-label="Menu"
+            >
+                ☰
+            </button>
+
             <div>
-
-                <h1>CodeAI</h1>
-
-                <p>Your coding learning companion</p>
-
+                <h1 id="chatTitle">CodeAI</h1>
+                <p>Intelligent AI assistant</p>
             </div>
 
-
             <div class="status">
-
                 <span></span>
-
                 Online
-
             </div>
 
         </header>
 
 
-
-        <!-- MESSAGES -->
         <section id="messages" class="messages">
-
 
             <div class="welcome">
 
-                <div class="welcome-icon">
-
-                    &lt;/&gt;
-
-                </div>
-
+                <div class="welcome-icon">&lt;/&gt;</div>
 
                 <h2>Welcome to CodeAI</h2>
 
-
                 <p>
-
-                    Learn programming, understand errors,
-                    debug code and build projects.
-
+                    Ask questions, write code, analyze files,
+                    read documents, understand images and more.
                 </p>
-
 
                 <div class="suggestions">
 
-
                     <button onclick="useSuggestion('Explain Python loops')">
-
-                        🐍 Explain Python loops
-
+                        Explain Python loops
                     </button>
-
 
                     <button onclick="useSuggestion('Help me debug my code')">
-
-                        🐛 Debug my code
-
+                        Debug my code
                     </button>
 
-
-                    <button onclick="useSuggestion('Help me build a Python project')">
-
-                        🛠 Build a project
-
+                    <button onclick="useSuggestion('Help me build a website')">
+                        Build a website
                     </button>
-
 
                     <button onclick="useSuggestion('What should I learn in JavaScript?')">
-
-                        📚 Learning path
-
+                        Learning path
                     </button>
-
 
                 </div>
 
             </div>
 
-
         </section>
 
 
-
-        <!-- INPUT + AD -->
         <div class="bottom-area">
 
+            <div id="attachmentPreview" class="attachment-preview"></div>
 
             <div class="input-area">
 
                 <div class="input-box">
 
-
-                    <textarea
-
-                        id="userInput"
-
-                        placeholder="Ask anything about coding..."
-
-                        rows="1"
-
-                        onkeydown="handleKey(event)"
-
-                    ></textarea>
-
-
                     <button
-
-                        id="sendButton"
-
-                        onclick="sendMessage()"
-
+                        id="attachButton"
+                        class="tool-button"
+                        onclick="toggleTools()"
+                        title="Tools"
                     >
-
-                        ➤
-
+                        +
                     </button>
 
+                    <textarea
+                        id="userInput"
+                        placeholder="Ask CodeAI anything..."
+                        rows="1"
+                        onkeydown="handleKey(event)"
+                    ></textarea>
+
+                    <button
+                        id="micButton"
+                        class="tool-button"
+                        onclick="startVoiceInput()"
+                        title="Voice input"
+                    >
+                        Mic
+                    </button>
+
+                    <button
+                        id="sendButton"
+                        onclick="sendMessage()"
+                    >
+                        ➤
+                    </button>
 
                 </div>
 
-
                 <p class="disclaimer">
-
-                    CodeAI can make mistakes. Always test generated code.
-
+                    CodeAI can make mistakes. Check important information.
                 </p>
 
             </div>
 
 
+            <div id="toolsMenu" class="tools-menu">
 
-            <!-- SMALL AD PLACEHOLDER -->
+                <button onclick="selectFile()">
+                    Upload File
+                </button>
 
-            <div class="ad-container">
+                <button onclick="selectFolder()">
+                    Upload Folder
+                </button>
 
-                <span class="ad-label">ADVERTISEMENT</span>
+                <button onclick="selectImage()">
+                    Upload Image
+                </button>
 
-                <div class="ad-box">
+                <button onclick="openCamera()">
+                    Take Photo
+                </button>
 
-                    <p>Advertisement</p>
-
-                </div>
+                <button onclick="createPDFFromChat()">
+                    Create PDF
+                </button>
 
             </div>
 
 
+            <input
+                id="fileInput"
+                type="file"
+                hidden
+                onchange="handleFile(event)"
+            >
+
+            <input
+                id="imageInput"
+                type="file"
+                accept="image/*"
+                hidden
+                onchange="handleImage(event)"
+            >
+
+            <input
+                id="folderInput"
+                type="file"
+                webkitdirectory
+                directory
+                multiple
+                hidden
+                onchange="handleFolder(event)"
+            >
+
+
+            <div class="ad-container">
+
+                <span class="ad-label">
+                    ADVERTISEMENT
+                </span>
+
+                <div class="ad-box">
+                    <p>Advertisement</p>
+                </div>
+
+            </div>
+
         </div>
 
-
     </main>
+
+</div>
+
+
+<div id="cameraModal" class="camera-modal">
+
+    <div class="camera-panel">
+
+        <h3>Camera</h3>
+
+        <video
+            id="cameraVideo"
+            autoplay
+            playsinline
+        ></video>
+
+        <canvas
+            id="cameraCanvas"
+            hidden
+        ></canvas>
+
+        <div class="camera-buttons">
+
+            <button onclick="closeCamera()">
+                Cancel
+            </button>
+
+            <button onclick="capturePhoto()">
+                Capture
+            </button>
+
+        </div>
+
+    </div>
 
 </div>
 
