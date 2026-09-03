@@ -2,10 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
     <title>CodeAI</title>
-
+    <meta
+        name="description"
+        content="CodeAI - futuristic general AI assistant"
+    >
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -14,23 +19,22 @@
 <div class="app">
 
     <!-- SIDEBAR -->
-    <aside class="sidebar" id="sidebar">
+    <aside id="sidebar" class="sidebar">
 
         <div class="brand">
-            <div class="brand-orb"></div>
-
+            <div class="brand-mark">C</div>
             <div>
-                <h1>CodeAI</h1>
-                <span>AI SYSTEM</span>
+                <strong>CodeAI</strong>
+                <span>AI ASSISTANT</span>
             </div>
         </div>
 
-        <button class="new-chat" id="newChatBtn">
+        <button id="newChatBtn" class="new-chat">
             <span>+</span>
             New Chat
         </button>
 
-        <div class="search-box">
+        <div class="search-wrap">
             <input
                 id="chatSearch"
                 type="text"
@@ -38,17 +42,16 @@
             >
         </div>
 
-        <div class="chat-list" id="chatList"></div>
+        <div id="chatList" class="chat-list"></div>
 
         <div class="sidebar-bottom">
 
-            <button id="plansBtn">
-                <span>◈</span>
-                Master Plan
+            <button id="masterBtn" class="sidebar-button master-button">
+                <span>MASTER</span>
+                <small>₹20 / month</small>
             </button>
 
-            <button id="settingsBtn">
-                <span>⚙</span>
+            <button id="settingsBtn" class="sidebar-button">
                 Settings
             </button>
 
@@ -56,303 +59,253 @@
 
     </aside>
 
-
     <!-- MAIN -->
     <main class="main">
 
         <header class="topbar">
 
-            <button class="mobile-menu" id="mobileMenu">
+            <button id="mobileMenu" class="icon-button mobile-only">
                 ☰
             </button>
 
             <div class="top-title">
-
-                <div class="status-dot"></div>
-
-                <div>
-                    <strong>CodeAI</strong>
-                    <small id="statusText">ONLINE</small>
-                </div>
-
+                <span>CodeAI</span>
+                <small id="connectionStatus">ONLINE</small>
             </div>
 
-            <button class="plan-pill" id="topPlanBtn">
+            <div id="planBadge" class="plan-badge">
                 FREE
-            </button>
+            </div>
 
         </header>
 
-
         <!-- CHAT -->
-        <section class="chat-area">
+        <section id="chatArea" class="chat-area">
 
-            <div class="messages" id="messages">
+            <div id="welcome" class="welcome">
 
-                <div class="welcome" id="welcome">
+                <div class="welcome-logo">C</div>
 
-                    <div class="welcome-orb">
-                        <div></div>
-                    </div>
+                <h1>What can I help you with?</h1>
 
-                    <h2>What can I help you with?</h2>
+                <p>
+                    Ask questions, write code, analyze files,
+                    understand images, or just chat.
+                </p>
 
-                    <p>
-                        Ask anything. CodeAI can understand questions,
-                        files, images, PDFs and more.
-                    </p>
+                <div class="suggestions">
 
-                    <div class="suggestions">
+                    <button data-prompt="Explain how artificial intelligence works simply.">
+                        Explain something
+                    </button>
 
-                        <button data-prompt="Explain artificial intelligence simply">
-                            Explain AI simply
-                        </button>
+                    <button data-prompt="Help me build a Python project.">
+                        Build something
+                    </button>
 
-                        <button data-prompt="Help me create a Python project">
-                            Create a Python project
-                        </button>
+                    <button data-prompt="Give me some useful ideas for my next project.">
+                        Give me ideas
+                    </button>
 
-                        <button data-prompt="Tell me something interesting">
-                            Tell me something interesting
-                        </button>
-
-                        <button data-prompt="What can you do?">
-                            What can you do?
-                        </button>
-
-                    </div>
+                    <button data-prompt="What can you help me do?">
+                        What can you do?
+                    </button>
 
                 </div>
 
             </div>
 
+            <div id="messages"></div>
+
         </section>
 
+        <!-- ATTACHMENTS -->
+        <div id="attachments" class="attachments"></div>
 
-        <!-- ATTACHMENT PREVIEW -->
-        <div class="attachment-bar" id="attachmentBar">
-
-            <div id="attachmentName"></div>
-
-            <button id="removeAttachment">
-                ×
-            </button>
-
-        </div>
-
+        <!-- STATUS -->
+        <div id="statusText" class="status-text"></div>
 
         <!-- COMPOSER -->
-        <section class="composer">
+        <section class="composer-wrap">
 
-            <div class="composer-tools">
+            <div class="composer">
 
                 <button
-                    class="tool-button"
                     id="fileBtn"
+                    class="round-button"
                     title="Upload file"
                 >
                     +
                 </button>
 
                 <input
-                    type="file"
                     id="fileInput"
-                    hidden
-                >
-
-                <input
                     type="file"
-                    id="folderInput"
-                    webkitdirectory
-                    directory
-                    multiple
                     hidden
+                    multiple
                 >
 
                 <button
-                    class="tool-button"
                     id="folderBtn"
+                    class="round-button"
                     title="Upload folder"
                 >
-                    □
+                    F
                 </button>
 
-                <button
-                    class="tool-button"
-                    id="cameraBtn"
-                    title="Camera"
+                <input
+                    id="folderInput"
+                    type="file"
+                    hidden
+                    multiple
+                    webkitdirectory
                 >
-                    ◉
-                </button>
-
-                <button
-                    class="tool-button"
-                    id="pdfBtn"
-                    title="Create PDF"
-                >
-                    PDF
-                </button>
-
-            </div>
-
-
-            <div class="input-shell">
 
                 <textarea
-                    id="userInput"
-                    placeholder="Ask CodeAI anything..."
+                    id="messageInput"
                     rows="1"
+                    placeholder="Message CodeAI..."
                 ></textarea>
 
-
                 <button
-                    class="voice-button"
-                    id="voiceBtn"
-                    title="Voice"
+                    id="cameraBtn"
+                    class="round-button"
+                    title="Camera"
                 >
-                    <span class="voice-ring"></span>
-                    <span class="voice-core"></span>
+                    C
                 </button>
 
+                <button
+                    id="voiceBtn"
+                    class="voice-button"
+                    title="Voice"
+                >
+                    <span></span>
+                </button>
 
                 <button
-                    class="send-button"
                     id="sendBtn"
+                    class="send-button"
+                    title="Send"
                 >
                     →
                 </button>
 
             </div>
 
+            <div class="composer-tools">
 
-            <div class="composer-footer">
-                <span id="modeText">READY</span>
-                <span>CodeAI 3.0</span>
+                <button id="pdfBtn">
+                    Create PDF
+                </button>
+
+                <span>
+                    CodeAI can make mistakes. Check important information.
+                </span>
+
             </div>
 
         </section>
 
     </main>
-
 </div>
 
 
 <!-- CAMERA MODAL -->
+<div id="cameraModal" class="modal hidden">
 
-<div class="modal hidden" id="cameraModal">
+    <div class="modal-card">
 
-    <div class="modal-card camera-card">
+        <button class="modal-close" data-close="cameraModal">
+            ×
+        </button>
 
-        <div class="modal-header">
-            <h3>Camera Vision</h3>
-
-            <button id="closeCamera">
-                ×
-            </button>
-        </div>
+        <h2>Camera</h2>
 
         <video id="cameraVideo" autoplay playsinline></video>
 
-        <button class="capture-button" id="captureBtn">
-            CAPTURE
+        <button id="captureBtn" class="primary-button">
+            Capture
         </button>
-
-        <canvas id="cameraCanvas" hidden></canvas>
 
     </div>
 
 </div>
 
 
-<!-- MASTER PLAN MODAL -->
+<!-- MASTER MODAL -->
+<div id="masterModal" class="modal hidden">
 
-<div class="modal hidden" id="plansModal">
+    <div class="modal-card master-card">
 
-    <div class="modal-card plans-card">
+        <button class="modal-close" data-close="masterModal">
+            ×
+        </button>
 
-        <div class="modal-header">
+        <h2>CodeAI Master</h2>
+
+        <p class="price">
+            ₹20 <span>/ month</span>
+        </p>
+
+        <div class="plan-comparison">
 
             <div>
-                <span class="modal-label">CODEAI</span>
-                <h2>Choose your plan</h2>
+                <h3>Free</h3>
+                <p>5 images/day</p>
+                <p>3 videos/day</p>
+                <p>Ads enabled</p>
             </div>
 
-            <button id="closePlans">
-                ×
-            </button>
-
-        </div>
-
-
-        <div class="plans">
-
-            <div class="plan-card">
-
-                <div class="plan-name">
-                    FREE
-                </div>
-
-                <div class="price">
-                    ₹0
-                    <small>/month</small>
-                </div>
-
-                <div class="features">
-
-                    <p>5 image generations/day</p>
-                    <p>3 video generations/day</p>
-                    <p>Basic AI</p>
-                    <p>Ads supported</p>
-
-                </div>
-
-                <button class="plan-button disabled">
-                    CURRENT PLAN
-                </button>
-
-            </div>
-
-
-            <div class="plan-card master">
-
-                <div class="master-tag">
-                    MASTER
-                </div>
-
-                <div class="plan-name">
-                    MASTER
-                </div>
-
-                <div class="price">
-                    ₹20
-                    <small>/month</small>
-                </div>
-
-                <div class="features">
-
-                    <p>50 image generations/day</p>
-                    <p>10 video generations/day</p>
-                    <p>Advanced audio tools</p>
-                    <p>Video editor</p>
-                    <p>Maximum video: 2 minutes</p>
-                    <p>No ads</p>
-
-                </div>
-
-                <button
-                    class="plan-button"
-                    id="subscribeBtn"
-                >
-                    GET MASTER
-                </button>
-
+            <div class="featured-plan">
+                <h3>Master</h3>
+                <p>50 images/day</p>
+                <p>10 videos/day</p>
+                <p>Audio tools</p>
+                <p>Video editor</p>
+                <p>No ads</p>
+                <p>2 minute max video</p>
             </div>
 
         </div>
 
-        <div class="payment-note">
-            Payment gateway will be connected here.
+        <button id="subscribeBtn" class="primary-button">
+            Buy Master
+        </button>
+
+        <p id="paymentMessage" class="small-message">
+            Payment system will be connected later.
+        </p>
+
+    </div>
+
+</div>
+
+
+<!-- SETTINGS -->
+<div id="settingsModal" class="modal hidden">
+
+    <div class="modal-card">
+
+        <button class="modal-close" data-close="settingsModal">
+            ×
+        </button>
+
+        <h2>Settings</h2>
+
+        <div class="setting-row">
+            <span>CodeAI version</span>
+            <strong>3.2.0</strong>
         </div>
+
+        <div class="setting-row">
+            <span>Your local user ID</span>
+            <code id="userIdDisplay"></code>
+        </div>
+
+        <button id="clearChatsBtn" class="danger-button">
+            Delete all local chats
+        </button>
 
     </div>
 
@@ -360,20 +313,15 @@
 
 
 <!-- PDF MODAL -->
-
-<div class="modal hidden" id="pdfModal">
+<div id="pdfModal" class="modal hidden">
 
     <div class="modal-card">
 
-        <div class="modal-header">
+        <button class="modal-close" data-close="pdfModal">
+            ×
+        </button>
 
-            <h3>Create PDF</h3>
-
-            <button id="closePdf">
-                ×
-            </button>
-
-        </div>
+        <h2>Create PDF</h2>
 
         <input
             id="pdfTitle"
@@ -383,52 +331,13 @@
 
         <textarea
             id="pdfContent"
-            class="pdf-content"
-            placeholder="Write exactly what you want inside the PDF..."
+            class="modal-textarea"
+            placeholder="Write the exact content for the PDF..."
         ></textarea>
 
-        <button
-            class="primary-button"
-            id="createPdfBtn"
-        >
-            CREATE PDF
+        <button id="createPdfBtn" class="primary-button">
+            Create & Download
         </button>
-
-    </div>
-
-</div>
-
-
-<!-- SETTINGS MODAL -->
-
-<div class="modal hidden" id="settingsModal">
-
-    <div class="modal-card">
-
-        <div class="modal-header">
-
-            <h3>Settings</h3>
-
-            <button id="closeSettings">
-                ×
-            </button>
-
-        </div>
-
-        <div class="settings-item">
-            <span>CodeAI version</span>
-            <strong>3.0.0</strong>
-        </div>
-
-        <div class="settings-item">
-            <span>Creator</span>
-            <strong>VARAD WANSAGAR</strong>
-        </div>
-
-        <div class="settings-item">
-            <span>Theme</span>
-            <strong>Pure Black</strong>
-        </div>
 
     </div>
 
