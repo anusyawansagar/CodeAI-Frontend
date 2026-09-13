@@ -2,113 +2,184 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>CodeAI</title>
-    <meta
-        name="description"
-        content="CodeAI - futuristic general AI assistant"
-    >
+
     <link rel="stylesheet" href="style.css">
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 </head>
 
 <body>
 
-<div class="app">
+<!-- ================= ACCOUNT GATEWAY ================= -->
+
+<div id="accountGateway" class="gateway">
+    <div class="gateway-box">
+
+        <div class="gateway-logo">C</div>
+
+        <h1>Welcome to CodeAI</h1>
+
+        <p>
+            Your free AI assistant for coding, questions, files,
+            images, PDFs and more.
+        </p>
+
+        <button id="googleLoginBtn" class="google-btn">
+            <span>G</span>
+            Continue with Google
+        </button>
+
+        <button id="guestBtn" class="guest-btn">
+            Continue as Guest
+        </button>
+
+        <div class="gateway-note">
+            Google accounts can save chats in the cloud.<br>
+            Guest chats stay on this device.
+        </div>
+
+    </div>
+</div>
+
+
+<!-- ================= MAIN APP ================= -->
+
+<div id="app" class="app hidden">
 
     <!-- SIDEBAR -->
-    <aside id="sidebar" class="sidebar">
+
+    <aside class="sidebar" id="sidebar">
 
         <div class="brand">
-            <div class="brand-mark">C</div>
+            <div class="brand-logo">C</div>
+
             <div>
-                <strong>CodeAI</strong>
-                <span>AI ASSISTANT</span>
+                <div class="brand-name">CodeAI</div>
+                <div class="brand-subtitle">Free AI Assistant</div>
             </div>
         </div>
 
-        <button id="newChatBtn" class="new-chat">
-            <span>+</span>
-            New Chat
+        <button id="newChatBtn" class="new-chat-btn">
+            ＋ New Chat
         </button>
 
-        <div class="search-wrap">
-            <input
-                id="chatSearch"
-                type="text"
-                placeholder="Search chats..."
-            >
+        <div class="sidebar-section">
+
+            <div class="section-title">
+                MODE
+            </div>
+
+            <select id="languageSelect" class="language-select">
+                <option value="General">General</option>
+                <option value="Python">Python</option>
+                <option value="JavaScript">JavaScript</option>
+                <option value="HTML">HTML</option>
+                <option value="CSS">CSS</option>
+                <option value="C">C</option>
+                <option value="C++">C++</option>
+                <option value="Java">Java</option>
+                <option value="Rust">Rust</option>
+                <option value="SQL">SQL</option>
+            </select>
+
         </div>
 
-        <div id="chatList" class="chat-list"></div>
+        <div class="sidebar-spacer"></div>
 
-        <div class="sidebar-bottom">
+        <div class="account-card">
 
-            <button id="masterBtn" class="sidebar-button master-button">
-                <span>MASTER</span>
-                <small>₹20 / month</small>
-            </button>
+            <div class="account-avatar" id="accountAvatar">
+                G
+            </div>
 
-            <button id="settingsBtn" class="sidebar-button">
-                Settings
+            <div class="account-details">
+
+                <div id="accountName">
+                    Guest
+                </div>
+
+                <div id="accountType">
+                    Local mode
+                </div>
+
+            </div>
+
+            <button id="signOutBtn" class="signout-btn">
+                ↪
             </button>
 
         </div>
 
     </aside>
 
+
     <!-- MAIN -->
+
     <main class="main">
+
+        <!-- HEADER -->
 
         <header class="topbar">
 
-            <button id="mobileMenu" class="icon-button mobile-only">
+            <button id="menuBtn" class="menu-btn">
                 ☰
             </button>
 
             <div class="top-title">
-                <span>CodeAI</span>
-                <small id="connectionStatus">ONLINE</small>
+                <span class="status-dot"></span>
+                CodeAI
             </div>
 
-            <div id="planBadge" class="plan-badge">
-                FREE
+            <div class="top-actions">
+
+                <button id="aboutBtn" class="icon-btn" title="About">
+                    ?
+                </button>
+
             </div>
 
         </header>
 
+
         <!-- CHAT -->
-        <section id="chatArea" class="chat-area">
+
+        <section class="chat-area" id="chatArea">
 
             <div id="welcome" class="welcome">
 
-                <div class="welcome-logo">C</div>
+                <div class="welcome-logo">
+                    C
+                </div>
 
                 <h1>What can I help you with?</h1>
 
                 <p>
-                    Ask questions, write code, analyze files,
-                    understand images, or just chat.
+                    Ask CodeAI anything. Coding, questions,
+                    files, images, PDFs and more.
                 </p>
 
                 <div class="suggestions">
 
-                    <button data-prompt="Explain how artificial intelligence works simply.">
-                        Explain something
+                    <button class="suggestion">
+                        Explain quantum computing simply
                     </button>
 
-                    <button data-prompt="Help me build a Python project.">
-                        Build something
+                    <button class="suggestion">
+                        Make a Python calculator
                     </button>
 
-                    <button data-prompt="Give me some useful ideas for my next project.">
-                        Give me ideas
+                    <button class="suggestion">
+                        Create a study plan for me
                     </button>
 
-                    <button data-prompt="What can you help me do?">
-                        What can you do?
+                    <button class="suggestion">
+                        Explain this code
                     </button>
 
                 </div>
@@ -119,229 +190,140 @@
 
         </section>
 
-        <!-- ATTACHMENTS -->
-        <div id="attachments" class="attachments"></div>
 
-        <!-- STATUS -->
-        <div id="statusText" class="status-text"></div>
+        <!-- ATTACHMENT PREVIEW -->
 
-        <!-- COMPOSER -->
-        <section class="composer-wrap">
+        <div id="attachmentPreview" class="attachment-preview hidden">
 
-            <div class="composer">
+            <div class="attachment-info">
+
+                <div id="attachmentIcon" class="attachment-icon">
+                    📎
+                </div>
+
+                <div>
+                    <div id="attachmentName">
+                        File
+                    </div>
+
+                    <div id="attachmentType">
+                        Attachment
+                    </div>
+                </div>
+
+            </div>
+
+            <button id="removeAttachmentBtn">
+                ×
+            </button>
+
+        </div>
+
+
+        <!-- INPUT -->
+
+        <div class="input-wrapper">
+
+            <div class="input-box">
 
                 <button
-                    id="fileBtn"
-                    class="round-button"
-                    title="Upload file"
-                >
-                    +
+                    id="attachBtn"
+                    class="input-tool"
+                    title="Upload file or image">
+                    ＋
                 </button>
-
-                <input
-                    id="fileInput"
-                    type="file"
-                    hidden
-                    multiple
-                >
 
                 <button
-                    id="folderBtn"
-                    class="round-button"
-                    title="Upload folder"
-                >
-                    F
+                    id="cameraBtn"
+                    class="input-tool"
+                    title="Take a photo">
+                    📷
                 </button>
 
-                <input
-                    id="folderInput"
-                    type="file"
-                    hidden
-                    multiple
-                    webkitdirectory
-                >
+                <button
+                    id="micBtn"
+                    class="input-tool"
+                    title="Voice input">
+                    🎤
+                </button>
 
                 <textarea
                     id="messageInput"
                     rows="1"
-                    placeholder="Message CodeAI..."
+                    placeholder="Ask CodeAI anything..."
                 ></textarea>
 
                 <button
-                    id="cameraBtn"
-                    class="round-button"
-                    title="Camera"
-                >
-                    C
-                </button>
-
-                <button
-                    id="voiceBtn"
-                    class="voice-button"
-                    title="Voice"
-                >
-                    <span></span>
-                </button>
-
-                <button
                     id="sendBtn"
-                    class="send-button"
-                    title="Send"
-                >
-                    →
+                    class="send-btn"
+                    title="Send">
+                    ➤
                 </button>
 
             </div>
 
-            <div class="composer-tools">
-
-                <button id="pdfBtn">
-                    Create PDF
-                </button>
-
-                <span>
-                    CodeAI can make mistakes. Check important information.
-                </span>
-
+            <div class="input-tools-text">
+                Free • No subscriptions • No ads
             </div>
 
-        </section>
+        </div>
 
     </main>
-</div>
-
-
-<!-- CAMERA MODAL -->
-<div id="cameraModal" class="modal hidden">
-
-    <div class="modal-card">
-
-        <button class="modal-close" data-close="cameraModal">
-            ×
-        </button>
-
-        <h2>Camera</h2>
-
-        <video id="cameraVideo" autoplay playsinline></video>
-
-        <button id="captureBtn" class="primary-button">
-            Capture
-        </button>
-
-    </div>
 
 </div>
 
 
-<!-- MASTER MODAL -->
-<div id="masterModal" class="modal hidden">
+<!-- FILE INPUT -->
 
-    <div class="modal-card master-card">
-
-        <button class="modal-close" data-close="masterModal">
-            ×
-        </button>
-
-        <h2>CodeAI Master</h2>
-
-        <p class="price">
-            ₹20 <span>/ month</span>
-        </p>
-
-        <div class="plan-comparison">
-
-            <div>
-                <h3>Free</h3>
-                <p>5 images/day</p>
-                <p>3 videos/day</p>
-                <p>Ads enabled</p>
-            </div>
-
-            <div class="featured-plan">
-                <h3>Master</h3>
-                <p>50 images/day</p>
-                <p>10 videos/day</p>
-                <p>Audio tools</p>
-                <p>Video editor</p>
-                <p>No ads</p>
-                <p>2 minute max video</p>
-            </div>
-
-        </div>
-
-        <button id="subscribeBtn" class="primary-button">
-            Buy Master
-        </button>
-
-        <p id="paymentMessage" class="small-message">
-            Payment system will be connected later.
-        </p>
-
-    </div>
-
-</div>
+<input
+    type="file"
+    id="fileInput"
+    class="hidden-input"
+    accept="image/*,.txt,.py,.js,.html,.css,.json,.md,.csv,.java,.cpp,.c,.h,.rs,.sql,.xml,.yaml,.yml"
+>
 
 
-<!-- SETTINGS -->
-<div id="settingsModal" class="modal hidden">
+<!-- CAMERA INPUT -->
 
-    <div class="modal-card">
-
-        <button class="modal-close" data-close="settingsModal">
-            ×
-        </button>
-
-        <h2>Settings</h2>
-
-        <div class="setting-row">
-            <span>CodeAI version</span>
-            <strong>3.2.0</strong>
-        </div>
-
-        <div class="setting-row">
-            <span>Your local user ID</span>
-            <code id="userIdDisplay"></code>
-        </div>
-
-        <button id="clearChatsBtn" class="danger-button">
-            Delete all local chats
-        </button>
-
-    </div>
-
-</div>
+<input
+    type="file"
+    id="cameraInput"
+    class="hidden-input"
+    accept="image/*"
+    capture="environment"
+>
 
 
-<!-- PDF MODAL -->
-<div id="pdfModal" class="modal hidden">
+<!-- GENERAL IMAGE INPUT -->
 
-    <div class="modal-card">
+<input
+    type="file"
+    id="imageInput"
+    class="hidden-input"
+    accept="image/*"
+>
 
-        <button class="modal-close" data-close="pdfModal">
-            ×
-        </button>
 
-        <h2>Create PDF</h2>
+<!-- FIREBASE CONFIG -->
 
-        <input
-            id="pdfTitle"
-            class="modal-input"
-            placeholder="PDF title"
-        >
+<script>
+const firebaseConfig = {
+    apiKey:"AIza1ngrV4SBU4zZWPE_XLVKmEM",
+    authDomain:"codeai-caec6.firebaseapp.com",
+    projectId:"codeai-caec6",
+    storageBucket:"codeai-caec6.firebasestorage.app",
+    messagingSenderId:"477069579145",
+    appId:"1:477069579145:web:714e016825ffa9eb4fc758",
+    measurementId:"G-3SJ88SHP7K"
+}
 
-        <textarea
-            id="pdfContent"
-            class="modal-textarea"
-            placeholder="Write the exact content for the PDF..."
-        ></textarea>
+firebase.initializeApp(firebaseConfig);
 
-        <button id="createPdfBtn" class="primary-button">
-            Create & Download
-        </button>
+window.firebaseAuth = firebase.auth();
+window.firebaseDB = firebase.firestore();
 
-    </div>
-
-</div>
+window.googleProvider = new firebase.auth.GoogleAuthProvider();
+</script>
 
 
 <script src="script.js"></script>
