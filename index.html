@@ -13,6 +13,8 @@
         content="CodeAI - Your futuristic AI assistant"
     >
 
+    <meta name="theme-color" content="#080808">
+
     <title>CodeAI</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,13 +26,18 @@
     >
 
     <link rel="stylesheet" href="style.css">
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 </head>
 
 <body>
 
-    <!-- ============================= -->
-    <!-- ACCOUNT GATEWAY -->
-    <!-- ============================= -->
+    <!-- =====================================================
+         ACCOUNT GATEWAY
+         ===================================================== -->
 
     <section id="accountGateway" class="gateway">
 
@@ -39,23 +46,38 @@
 
         <div class="gateway-box">
 
-            <div class="gateway-logo">
+            <!-- CODEAI MAIN LOGO -->
+            <div class="gateway-logo" aria-label="CodeAI logo">
                 <span>V</span>
             </div>
 
-            <h1>Welcome to <strong>CodeAI</strong></h1>
+            <h1>
+                Welcome to <strong>CodeAI</strong>
+            </h1>
 
             <p class="gateway-description">
                 Your futuristic AI assistant for coding, questions,
                 files, images and more.
             </p>
 
-            <button id="googleLoginBtn" class="google-login-btn">
+            <!-- GOOGLE LOGIN -->
+
+            <button
+                id="googleLoginBtn"
+                class="google-login-btn"
+                type="button"
+            >
                 <span class="google-icon">G</span>
                 <span>Continue with Google</span>
             </button>
 
-            <button id="guestBtn" class="guest-btn">
+            <!-- GUEST LOGIN -->
+
+            <button
+                id="guestBtn"
+                class="guest-btn"
+                type="button"
+            >
                 Continue as Guest
             </button>
 
@@ -64,25 +86,30 @@
             </div>
 
             <p class="gateway-note">
-                Guest chats stay on this device.
+                Guest chats stay on this device.<br>
                 Sign in with Google to save chats to your account.
             </p>
 
-            <div id="authError" class="auth-error"></div>
+            <div
+                id="authError"
+                class="auth-error"
+                aria-live="polite"
+            ></div>
 
         </div>
+
     </section>
 
 
-    <!-- ============================= -->
-    <!-- MAIN APP -->
-    <!-- ============================= -->
+    <!-- =====================================================
+         MAIN APP
+         ===================================================== -->
 
     <section id="app" class="app hidden">
 
         <!-- SIDEBAR -->
 
-        <aside class="sidebar">
+        <aside id="sidebar" class="sidebar">
 
             <div class="sidebar-top">
 
@@ -93,6 +120,7 @@
                     </div>
 
                     <div class="brand-info">
+
                         <div class="brand-name">
                             CodeAI
                         </div>
@@ -100,14 +128,15 @@
                         <div class="brand-subtitle">
                             AI Assistant
                         </div>
+
                     </div>
 
                 </div>
 
-
                 <button
                     id="newChatBtn"
                     class="new-chat-btn"
+                    type="button"
                     title="New chat"
                 >
                     <span>＋</span>
@@ -123,8 +152,10 @@
                 Your chats
             </div>
 
-            <div id="chatList" class="chat-list">
-            </div>
+            <div
+                id="chatList"
+                class="chat-list"
+            ></div>
 
 
             <!-- SIDEBAR BOTTOM -->
@@ -133,9 +164,12 @@
 
                 <div class="account-card">
 
-                    <div class="account-avatar" id="accountAvatar">
-                        G
-                    </div>
+                    <img
+                        id="accountAvatar"
+                        class="account-avatar"
+                        src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/user.svg"
+                        alt="Account"
+                    >
 
                     <div class="account-details">
 
@@ -150,7 +184,7 @@
                             id="accountType"
                             class="account-type"
                         >
-                            Guest mode
+                            Guest Mode
                         </div>
 
                     </div>
@@ -158,6 +192,7 @@
                     <button
                         id="signOutBtn"
                         class="sign-out-btn"
+                        type="button"
                         title="Sign out"
                     >
                         ↪
@@ -170,7 +205,9 @@
         </aside>
 
 
-        <!-- MAIN CONTENT -->
+        <!-- =================================================
+             MAIN CONTENT
+             ================================================= -->
 
         <main class="main">
 
@@ -181,6 +218,7 @@
                 <button
                     id="menuBtn"
                     class="menu-btn"
+                    type="button"
                     title="Menu"
                 >
                     ☰
@@ -200,6 +238,7 @@
                     <button
                         id="aboutBtn"
                         class="about-btn"
+                        type="button"
                     >
                         About
                     </button>
@@ -237,25 +276,37 @@
 
                     <div class="quick-actions">
 
-                        <button class="quick-card">
+                        <button
+                            class="quick-card suggestion"
+                            type="button"
+                        >
                             <span>⌘</span>
                             <strong>Code</strong>
                             <small>Build and debug code</small>
                         </button>
 
-                        <button class="quick-card">
+                        <button
+                            class="quick-card suggestion"
+                            type="button"
+                        >
                             <span>✦</span>
                             <strong>Learn</strong>
                             <small>Understand difficult topics</small>
                         </button>
 
-                        <button class="quick-card">
+                        <button
+                            class="quick-card suggestion"
+                            type="button"
+                        >
                             <span>◉</span>
                             <strong>Analyze</strong>
                             <small>Work with files and images</small>
                         </button>
 
-                        <button class="quick-card">
+                        <button
+                            class="quick-card suggestion"
+                            type="button"
+                        >
                             <span>⚡</span>
                             <strong>Create</strong>
                             <small>Generate ideas and content</small>
@@ -268,8 +319,10 @@
 
                 <!-- MESSAGES -->
 
-                <div id="messages" class="messages">
-                </div>
+                <div
+                    id="messages"
+                    class="messages"
+                ></div>
 
             </section>
 
@@ -306,6 +359,8 @@
                 <button
                     id="removeAttachmentBtn"
                     class="remove-attachment"
+                    type="button"
+                    title="Remove"
                 >
                     ×
                 </button>
@@ -313,7 +368,7 @@
             </div>
 
 
-            <!-- INPUT AREA -->
+            <!-- INPUT -->
 
             <div class="input-wrapper">
 
@@ -322,6 +377,7 @@
                     <button
                         id="attachBtn"
                         class="input-tool"
+                        type="button"
                         title="Attach file"
                     >
                         +
@@ -330,6 +386,7 @@
                     <button
                         id="cameraBtn"
                         class="input-tool"
+                        type="button"
                         title="Image"
                     >
                         ◉
@@ -338,11 +395,11 @@
                     <button
                         id="micBtn"
                         class="input-tool"
+                        type="button"
                         title="Voice"
                     >
                         🎙
                     </button>
-
 
                     <textarea
                         id="messageInput"
@@ -351,10 +408,10 @@
                         autocomplete="off"
                     ></textarea>
 
-
                     <button
                         id="sendBtn"
                         class="send-btn"
+                        type="button"
                         title="Send"
                     >
                         ↑
@@ -369,7 +426,7 @@
             </div>
 
 
-            <!-- HIDDEN FILE INPUTS -->
+            <!-- HIDDEN INPUTS -->
 
             <input
                 id="fileInput"
@@ -397,34 +454,14 @@
     </section>
 
 
-    <!-- ============================= -->
-    <!-- FIREBASE -->
-    <!-- ============================= -->
-
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-
+    <!-- =====================================================
+         FIREBASE INITIALIZATION
+         ===================================================== -->
 
     <script>
 
-        /*
-         * IMPORTANT:
-         * Replace ONLY these Firebase values with the
-         * configuration from:
-         *
-         * Firebase Console
-         * → Project Settings
-         * → General
-         * → Your apps
-         * → Web app
-         * → SDK setup and configuration
-         */
-
         const firebaseConfig = {
-            apiKey: "AIzaSyB5iThRKm4Y1ngrV4SBU4zZWPE_XLVKmEM",
+            apiKey: "AIzaSyB5iThRKm4Y1ngrV4SBU4zZWPE_XLVKmeM",
             authDomain: "codeai-caec6.firebaseapp.com",
             projectId: "codeai-caec6",
             storageBucket: "codeai-caec6.firebasestorage.app",
@@ -432,14 +469,30 @@
             appId: "1:477069579145:web:714e016825ffa9eb4fc758"
         };
 
+        try {
 
-        firebase.initializeApp(firebaseConfig);
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
 
-        const firebaseAuth = firebase.auth();
-        const firestore = firebase.firestore();
+            /*
+             * IMPORTANT:
+             * These are objects, NOT functions.
+             */
 
-        window.firebaseAuth = firebaseAuth();
-        window.firestore = firestore();
+            window.firebaseAuth = firebase.auth();
+            window.firestore = firebase.firestore();
+
+            console.log("🔥 CodeAI Firebase ready");
+
+        } catch (error) {
+
+            console.error(
+                "❌ Firebase initialization failed:",
+                error
+            );
+
+        }
 
     </script>
 
