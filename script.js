@@ -1,15 +1,11 @@
 "use strict";
 
-/*
-=========================================================
-CODEAI FRONTEND
-CLEAN STABLE VERSION
-=========================================================
-*/
+/* =========================================================
+   CODEAI FRONTEND
+   STABLE + FIREBASE CHAT SAVING + VISION + FILES
+========================================================= */
 
-const BACKEND_URL =
-    "https://codeai-backend-0y6t.onrender.com";
-
+const BACKEND_URL = "https://codeai-backend-0y6t.onrender.com";
 
 /* =========================================================
    GLOBAL STATE
@@ -21,6 +17,8 @@ let isGuest = false;
 let chatHistory = [];
 let currentChatId = null;
 
+let cloudChats = [];
+
 let selectedFile = null;
 let selectedImage = null;
 
@@ -30,19 +28,14 @@ let firebaseAuth = null;
 let firebaseDB = null;
 let googleProvider = null;
 
-
 /* =========================================================
-   START AFTER HTML LOADS
+   START
 ========================================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
-
     console.log("🚀 CodeAI JavaScript started");
-
     initCodeAI();
-
 });
-
 
 /* =========================================================
    MAIN INITIALIZATION
@@ -50,50 +43,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function initCodeAI() {
 
-    /*
-    Get Firebase.
-    Firebase scripts must be loaded by index.html.
-    */
-
     if (typeof firebase !== "undefined") {
 
         try {
 
-            /*
-            Use existing Firebase app if available.
-            Otherwise use the initialized app.
-            */
-
             if (firebase.apps.length > 0) {
 
-                firebaseAuth =
-                    firebase.auth();
+                firebaseAuth = firebase.auth();
+                firebaseDB = firebase.firestore();
+                googleProvider = new firebase.auth.GoogleAuthProvider();
 
-                firebaseDB =
-                    firebase.firestore();
-
-                googleProvider =
-                    new firebase.auth.GoogleAuthProvider();
-
-                console.log(
-                    "🔥 Firebase ready"
-                );
+                console.log("🔥 Firebase ready");
 
             } else {
 
                 console.warn(
                     "Firebase SDK loaded but no Firebase app was initialized."
                 );
-
             }
 
         } catch (error) {
 
-            console.error(
-                "Firebase setup error:",
-                error
-            );
-
+            console.error("Firebase setup error:", error);
         }
 
     } else {
@@ -101,36 +72,22 @@ function initCodeAI() {
         console.warn(
             "Firebase SDK not found. Guest mode will still work."
         );
-
     }
 
-
     setupGateway();
-
     setupChat();
-
     setupAttachments();
-
     setupMicrophone();
-
     setupSidebar();
-
     setupAbout();
-
     setupSuggestions();
-
     setupModeSelector();
-
     setupAuthState();
 
     showGateway();
 
-    console.log(
-        "✅ CodeAI ready"
-    );
-
+    console.log("✅ CodeAI ready");
 }
-
 
 /* =========================================================
    ELEMENT HELPER
@@ -140,18 +97,14 @@ function get(id) {
     return document.getElementById(id);
 }
 
-
 /* =========================================================
-   SHOW / HIDE SCREENS
+   SHOW / HIDE
 ========================================================= */
 
 function showGateway() {
 
-    const gateway =
-        get("accountGateway");
-
-    const app =
-        get("app");
+    const gateway = get("accountGateway");
+    const app = get("app");
 
     if (gateway) {
         gateway.classList.remove("hidden");
@@ -160,17 +113,12 @@ function showGateway() {
     if (app) {
         app.classList.add("hidden");
     }
-
 }
-
 
 function showApp() {
 
-    const gateway =
-        get("accountGateway");
-
-    const app =
-        get("app");
+    const gateway = get("accountGateway");
+    const app = get("app");
 
     if (gateway) {
         gateway.classList.add("hidden");
@@ -179,84 +127,49 @@ function showApp() {
     if (app) {
         app.classList.remove("hidden");
     }
-
 }
 
-
 /* =========================================================
-   ACCOUNT GATEWAY
+   GATEWAY
 ========================================================= */
 
 function setupGateway() {
 
-    const googleButton =
-        get("googleLoginBtn");
-
-    const guestButton =
-        get("guestBtn");
-
-
-    /* -----------------------------------------------------
-       GUEST
-    ----------------------------------------------------- */
+    const googleButton = get("googleLoginBtn");
+    const guestButton = get("guestBtn");
 
     if (guestButton) {
 
-        guestButton.addEventListener(
-            "click",
-            function (event) {
+        guestButton.addEventListener("click", (event) => {
 
-                event.preventDefault();
+            event.preventDefault();
 
-                console.log(
-                    "👤 Guest button clicked"
-                );
+            console.log("👤 Guest button clicked");
 
-                enterGuestMode();
-
-            }
-        );
+            enterGuestMode();
+        });
 
     } else {
 
-        console.error(
-            "❌ guestBtn not found"
-        );
-
+        console.error("❌ guestBtn not found");
     }
-
-
-    /* -----------------------------------------------------
-       GOOGLE
-    ----------------------------------------------------- */
 
     if (googleButton) {
 
-        googleButton.addEventListener(
-            "click",
-            function (event) {
+        googleButton.addEventListener("click", (event) => {
 
-                event.preventDefault();
+            event.preventDefault();
 
-                console.log(
-                    "🔐 Google button clicked"
-                );
+            console.log("🔐 Google button clicked");
 
-                loginWithGoogle();
-
-            }
-        );
+            loginWithGoogle();
+        });
 
     } else {
 
-        console.error(
-            "❌ googleLoginBtn not found"
-        );
-
+        console.error("❌ googleLoginBtn not found");
     }
-
 }
-
 
 /* =========================================================
    GUEST MODE
@@ -265,15 +178,11 @@ function setupGateway() {
 function enterGuestMode() {
 
     currentUser = null;
-
     isGuest = true;
 
     currentChatId = "guest";
 
-    localStorage.setItem(
-        "codeai_guest",
-        "true"
-    );
+    localStorage.setItem("codeai_guest", "true");
 
     showApp();
 
@@ -283,17 +192,14 @@ function enterGuestMode() {
 
     setTimeout(() => {
 
-        const input =
-            get("messageInput");
+        const input = get("messageInput");
 
         if (input) {
             input.focus();
         }
 
     }, 200);
-
 }
-
 
 /* =========================================================
    GOOGLE LOGIN
@@ -301,9 +207,7 @@ function enterGuestMode() {
 
 async function loginWithGoogle() {
 
-    const button =
-        get("googleLoginBtn");
-
+    const button = get("googleLoginBtn");
 
     if (!firebaseAuth) {
 
@@ -313,9 +217,7 @@ async function loginWithGoogle() {
         );
 
         return;
-
     }
-
 
     try {
 
@@ -328,32 +230,23 @@ async function loginWithGoogle() {
 
             button.textContent =
                 "Opening Google...";
-
         }
-
 
         if (!googleProvider) {
 
             googleProvider =
                 new firebase.auth.GoogleAuthProvider();
-
         }
-
 
         googleProvider.setCustomParameters({
             prompt: "select_account"
         });
 
-
         await firebaseAuth.signInWithPopup(
             googleProvider
         );
 
-
-        console.log(
-            "✅ Google sign-in completed"
-        );
-
+        console.log("✅ Google sign-in completed");
 
     } catch (error) {
 
@@ -362,15 +255,12 @@ async function loginWithGoogle() {
             error
         );
 
-
         let message =
             "Google Sign-In failed.\n\n";
 
-
         if (
             error &&
-            error.code ===
-            "auth/popup-blocked"
+            error.code === "auth/popup-blocked"
         ) {
 
             message +=
@@ -378,8 +268,7 @@ async function loginWithGoogle() {
 
         } else if (
             error &&
-            error.code ===
-            "auth/popup-closed-by-user"
+            error.code === "auth/popup-closed-by-user"
         ) {
 
             message +=
@@ -387,8 +276,7 @@ async function loginWithGoogle() {
 
         } else if (
             error &&
-            error.code ===
-            "auth/unauthorized-domain"
+            error.code === "auth/unauthorized-domain"
         ) {
 
             message +=
@@ -396,8 +284,7 @@ async function loginWithGoogle() {
 
         } else if (
             error &&
-            error.code ===
-            "auth/operation-not-allowed"
+            error.code === "auth/operation-not-allowed"
         ) {
 
             message +=
@@ -408,12 +295,9 @@ async function loginWithGoogle() {
             message +=
                 error?.message ||
                 "Unknown Firebase error.";
-
         }
 
-
         alert(message);
-
 
     } finally {
 
@@ -425,15 +309,10 @@ async function loginWithGoogle() {
 
                 button.innerHTML =
                     button.dataset.oldHTML;
-
             }
-
         }
-
     }
-
 }
-
 
 /* =========================================================
    FIREBASE AUTH STATE
@@ -448,49 +327,47 @@ function setupAuthState() {
         );
 
         return;
-
     }
-
 
     firebaseAuth.onAuthStateChanged(
         async (user) => {
 
             console.log(
                 "Auth state:",
-                user
-                    ? user.email
-                    : "signed out"
+                user ? user.email : "signed out"
             );
-
 
             if (user) {
 
-                currentUser =
-                    user;
-
-                isGuest =
-                    false;
-
+                currentUser = user;
+                isGuest = false;
 
                 localStorage.removeItem(
                     "codeai_guest"
                 );
 
-
                 showApp();
 
                 updateAccountUI();
 
+                await loadChatList();
+
                 await loadCloudChat();
 
+            } else {
 
+                /*
+                 User is not signed into Google.
+                 We do NOT automatically force guest mode.
+                */
+
+                if (!isGuest) {
+                    showGateway();
+                }
             }
-
         }
     );
-
 }
-
 
 /* =========================================================
    ACCOUNT UI
@@ -498,20 +375,11 @@ function setupAuthState() {
 
 function updateAccountUI() {
 
-    const name =
-        get("accountName");
+    const name = get("accountName");
+    const type = get("accountType");
+    const avatar = get("accountAvatar");
 
-    const type =
-        get("accountType");
-
-    const avatar =
-        get("accountAvatar");
-
-
-    if (
-        currentUser &&
-        !isGuest
-    ) {
+    if (currentUser && !isGuest) {
 
         if (name) {
 
@@ -519,57 +387,36 @@ function updateAccountUI() {
                 currentUser.displayName ||
                 currentUser.email ||
                 "Google User";
-
         }
-
 
         if (type) {
-
-            type.textContent =
-                "Google Account";
-
+            type.textContent = "Google Account";
         }
-
 
         if (avatar) {
 
             avatar.src =
                 currentUser.photoURL ||
                 "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg";
-
         }
 
-
         return;
-
     }
-
 
     if (name) {
-
-        name.textContent =
-            "Guest";
-
+        name.textContent = "Guest";
     }
-
 
     if (type) {
-
-        type.textContent =
-            "Guest Mode";
-
+        type.textContent = "Guest Mode";
     }
-
 
     if (avatar) {
 
         avatar.src =
             "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/user.svg";
-
     }
-
 }
-
 
 /* =========================================================
    SIGN OUT
@@ -577,13 +424,11 @@ function updateAccountUI() {
 
 function setupSignOut() {
 
-    const button =
-        get("signOutBtn");
+    const button = get("signOutBtn");
 
     if (!button) {
         return;
     }
-
 
     button.addEventListener(
         "click",
@@ -598,7 +443,6 @@ function setupSignOut() {
                 ) {
 
                     await firebaseAuth.signOut();
-
                 }
 
             } catch (error) {
@@ -607,29 +451,24 @@ function setupSignOut() {
                     "Sign out error:",
                     error
                 );
-
             }
 
-
             currentUser = null;
-
             isGuest = false;
 
             currentChatId = null;
-
             chatHistory = [];
+
+            cloudChats = [];
 
             localStorage.removeItem(
                 "codeai_guest"
             );
 
             showGateway();
-
         }
     );
-
 }
-
 
 /* =========================================================
    GUEST CHAT STORAGE
@@ -641,14 +480,11 @@ function saveGuestChat() {
         return;
     }
 
-
     try {
 
         localStorage.setItem(
             "codeai_guest_chat",
-            JSON.stringify(
-                chatHistory
-            )
+            JSON.stringify(chatHistory)
         );
 
     } catch (error) {
@@ -657,18 +493,14 @@ function saveGuestChat() {
             "Guest save error:",
             error
         );
-
     }
-
 }
-
 
 function loadGuestChat() {
 
     if (!isGuest) {
         return;
     }
-
 
     try {
 
@@ -677,34 +509,24 @@ function loadGuestChat() {
                 "codeai_guest_chat"
             );
 
-
         if (saved) {
 
             const parsed =
                 JSON.parse(saved);
 
+            if (Array.isArray(parsed)) {
 
-            if (
-                Array.isArray(parsed)
-            ) {
-
-                chatHistory =
-                    parsed;
+                chatHistory = parsed;
 
             } else {
 
-                chatHistory =
-                    [];
-
+                chatHistory = [];
             }
 
         } else {
 
-            chatHistory =
-                [];
-
+            chatHistory = [];
         }
-
 
     } catch (error) {
 
@@ -713,231 +535,133 @@ function loadGuestChat() {
             error
         );
 
-        chatHistory =
-            [];
-
+        chatHistory = [];
     }
-
 
     renderMessages();
-
 }
-
 
 /* =========================================================
-   CLOUD CHAT
+   CREATE CHAT TITLE
 ========================================================= */
 
-async function saveCloudChat() {
+function createChatTitle() {
+
+    const firstUserMessage =
+        chatHistory.find(
+            item => item.role === "user"
+        );
+
+    if (!firstUserMessage) {
+        return "New Chat";
+    }
+
+    let text =
+        String(firstUserMessage.content || "")
+            .replace(/\[Attached:[^\]]+\]/gi, "")
+            .replace(/\[Attached image\]/gi, "")
+            .replace(/\s+/g, " ")
+            .trim();
+
+    if (!text) {
+        return "New Chat";
+    }
+
+    const lower = text.toLowerCase();
+
+    /* Greetings */
 
     if (
-        !currentUser ||
-        isGuest ||
-        !firebaseDB
+        /^(hi|hello|hey|hii|helo|good morning|good afternoon|good evening)\b/.test(lower)
     ) {
-
-        return;
-
+        return "Greeting";
     }
 
-
-    try {
-
-        if (!currentChatId) {
-
-            currentChatId =
-                firebaseDB
-                    .collection("users")
-                    .doc(currentUser.uid)
-                    .collection("chats")
-                    .doc()
-                    .id;
-
-        }
-
-
-        await firebaseDB
-            .collection("users")
-            .doc(currentUser.uid)
-            .collection("chats")
-            .doc(currentChatId)
-            .set(
-                {
-                    messages:
-                        cleanHistory(),
-
-                    title:
-                        createChatTitle(),
-
-                    updatedAt:
-                        firebase.firestore.FieldValue.serverTimestamp()
-
-                },
-                {
-                    merge: true
-                }
-            );
-
-
-        console.log(
-            "☁️ Chat saved to Firestore"
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "❌ Firestore save error:",
-            error
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   LOAD CLOUD CHAT
-========================================================= */
-
-async function loadCloudChat() {
+    /* Coding */
 
     if (
-        !currentUser ||
-        isGuest ||
-        !firebaseDB
+        /code|coding|python|javascript|html|css|java|c\+\+|program|programming|bug|error|debug|website|app|api/.test(lower)
     ) {
-
-        return;
-
+        return "Coding Help";
     }
 
+    /* Math */
 
-    try {
-
-        /*
-        We intentionally do NOT use orderBy().
-        This avoids problems with old documents
-        that may not have updatedAt.
-        */
-
-        const snapshot =
-            await firebaseDB
-                .collection("users")
-                .doc(currentUser.uid)
-                .collection("chats")
-                .limit(20)
-                .get();
-
-
-        if (
-            snapshot.empty
-        ) {
-
-            chatHistory =
-                [];
-
-            currentChatId =
-                null;
-
-            renderMessages();
-
-            return;
-
-        }
-
-
-        let newestDoc =
-            null;
-
-
-        snapshot.forEach(
-            (doc) => {
-
-                if (!newestDoc) {
-
-                    newestDoc =
-                        doc;
-
-                    return;
-
-                }
-
-
-                const current =
-                    doc.data();
-
-                const newest =
-                    newestDoc.data();
-
-
-                const currentTime =
-                    current.updatedAt?.seconds ||
-                    0;
-
-                const newestTime =
-                    newest.updatedAt?.seconds ||
-                    0;
-
-
-                if (
-                    currentTime >
-                    newestTime
-                ) {
-
-                    newestDoc =
-                        doc;
-
-                }
-
-            }
-        );
-
-
-        if (newestDoc) {
-
-            const data =
-                newestDoc.data();
-
-
-            currentChatId =
-                newestDoc.id;
-
-
-            chatHistory =
-                Array.isArray(
-                    data.messages
-                )
-                    ? data.messages
-                    : [];
-
-        }
-
-
-        renderMessages();
-
-
-        console.log(
-            "☁️ Cloud chat loaded"
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "❌ Firestore load error:",
-            error
-        );
-
-        chatHistory =
-            [];
-
-        renderMessages();
-
+    if (
+        /math|calculate|equation|algebra|geometry|fraction|percentage|prime|factor|multiplication|division/.test(lower)
+    ) {
+        return "Math Help";
     }
 
+    /* Image */
+
+    if (
+        /image|picture|photo|attached image|analyze this image|camera/.test(lower)
+    ) {
+        return "Image Analysis";
+    }
+
+    /* PDF / files */
+
+    if (
+        /pdf|document|file|notes|read this|summarize this document/.test(lower)
+    ) {
+        return "Document Help";
+    }
+
+    /* YouTube */
+
+    if (
+        /youtube|shorts|subscriber|subscribers|channel|video|thumbnail|views/.test(lower)
+    ) {
+        return "YouTube Help";
+    }
+
+    /* Web project */
+
+    if (
+        /firebase|firestore|render|vercel|github|hosting|domain|deploy|deployment|frontend|backend/.test(lower)
+    ) {
+        return "Web Project";
+    }
+
+    /* PC */
+
+    if (
+        /computer|pc|windows|laptop|gpu|cpu|graphics|software|driver|nvidia/.test(lower)
+    ) {
+        return "PC Help";
+    }
+
+    /* School */
+
+    if (
+        /school|homework|question|exam|study|class|chapter|lesson/.test(lower)
+    ) {
+        return "School Help";
+    }
+
+    /* AI */
+
+    if (
+        /ai|artificial intelligence|chatbot|gemini|gpt|model|llm/.test(lower)
+    ) {
+        return "AI Chat";
+    }
+
+    /* General title */
+
+    let title = text;
+
+    if (title.length > 38) {
+
+        title =
+            title.substring(0, 38).trim() +
+            "...";
+    }
+
+    return title || "New Chat";
 }
-
 
 /* =========================================================
    CLEAN HISTORY
@@ -952,54 +676,398 @@ function cleanHistory() {
                     message.role === "user" ||
                     message.role === "assistant"
                 ) &&
-                typeof message.content ===
-                    "string"
+                typeof message.content === "string"
         )
         .slice(-40);
-
 }
-
 
 /* =========================================================
-   CHAT TITLE
+   SAVE CLOUD CHAT
 ========================================================= */
 
-function createChatTitle() {
+async function saveCloudChat() {
 
-    const first =
-        chatHistory.find(
-            item =>
-                item.role === "user"
+    if (
+        !currentUser ||
+        isGuest ||
+        !firebaseDB ||
+        !chatHistory.length
+    ) {
+        return;
+    }
+
+    try {
+
+        const chats =
+            firebaseDB
+                .collection("users")
+                .doc(currentUser.uid)
+                .collection("chats");
+
+        if (!currentChatId) {
+
+            currentChatId =
+                chats.doc().id;
+        }
+
+        const title =
+            createChatTitle();
+
+        await chats
+            .doc(currentChatId)
+            .set(
+                {
+                    title: title,
+
+                    messages: cleanHistory(),
+
+                    updatedAt:
+                        firebase.firestore.FieldValue.serverTimestamp()
+                },
+                {
+                    merge: true
+                }
+            );
+
+        console.log(
+            "☁️ Chat saved:",
+            title
         );
 
+        await loadChatList();
 
-    if (!first) {
+    } catch (error) {
 
-        return "New Chat";
-
+        console.error(
+            "❌ Firestore save error:",
+            error
+        );
     }
-
-
-    let title =
-        first.content
-            .replace(/\s+/g, " ")
-            .trim();
-
-
-    if (title.length > 45) {
-
-        title =
-            title.substring(0, 45) +
-            "...";
-
-    }
-
-
-    return title ||
-        "New Chat";
-
 }
 
+/* =========================================================
+   LOAD ALL CLOUD CHAT TITLES
+========================================================= */
+
+async function loadChatList() {
+
+    if (
+        !currentUser ||
+        isGuest ||
+        !firebaseDB
+    ) {
+        return;
+    }
+
+    try {
+
+        const snapshot =
+            await firebaseDB
+                .collection("users")
+                .doc(currentUser.uid)
+                .collection("chats")
+                .get();
+
+        cloudChats =
+            snapshot.docs.map(doc => {
+
+                const data =
+                    doc.data() || {};
+
+                return {
+                    id: doc.id,
+
+                    title:
+                        data.title ||
+                        "New Chat",
+
+                    updatedAt:
+                        data.updatedAt ||
+                        null
+                };
+            });
+
+        cloudChats.sort(
+            (a, b) =>
+                (b.updatedAt?.seconds || 0) -
+                (a.updatedAt?.seconds || 0)
+        );
+
+        renderChatList();
+
+        console.log(
+            "☁️ Chat list loaded:",
+            cloudChats.length
+        );
+
+    } catch (error) {
+
+        console.error(
+            "❌ Chat list error:",
+            error
+        );
+    }
+}
+
+/* =========================================================
+   OPEN SAVED CLOUD CHAT
+========================================================= */
+
+async function openCloudChat(chatId) {
+
+    if (
+        !currentUser ||
+        isGuest ||
+        !firebaseDB
+    ) {
+        return;
+    }
+
+    try {
+
+        const doc =
+            await firebaseDB
+                .collection("users")
+                .doc(currentUser.uid)
+                .collection("chats")
+                .doc(chatId)
+                .get();
+
+        if (!doc.exists) {
+            return;
+        }
+
+        const data =
+            doc.data() || {};
+
+        currentChatId =
+            doc.id;
+
+        chatHistory =
+            Array.isArray(data.messages)
+                ? data.messages
+                : [];
+
+        renderMessages();
+
+        renderChatList();
+
+        console.log(
+            "📂 Opened chat:",
+            data.title
+        );
+
+    } catch (error) {
+
+        console.error(
+            "❌ Could not open chat:",
+            error
+        );
+    }
+}
+
+/* =========================================================
+   RENDER CHAT LIST
+========================================================= */
+
+function renderChatList() {
+
+    const list = get("chatList");
+
+    if (!list) {
+        return;
+    }
+
+    list.innerHTML = "";
+
+    if (!currentUser || isGuest) {
+
+        return;
+    }
+
+    if (!cloudChats.length) {
+
+        const empty =
+            document.createElement("div");
+
+        empty.textContent =
+            "No saved chats yet.";
+
+        empty.style.opacity =
+            "0.5";
+
+        empty.style.padding =
+            "10px";
+
+        list.appendChild(empty);
+
+        return;
+    }
+
+    cloudChats.forEach(chat => {
+
+        const button =
+            document.createElement("button");
+
+        button.type =
+            "button";
+
+        button.className =
+            "saved-chat";
+
+        button.textContent =
+            chat.title;
+
+        button.style.width =
+            "100%";
+
+        button.style.textAlign =
+            "left";
+
+        button.style.background =
+            "transparent";
+
+        button.style.border =
+            "0";
+
+        button.style.color =
+            "inherit";
+
+        button.style.padding =
+            "10px";
+
+        button.style.cursor =
+            "pointer";
+
+        button.style.borderRadius =
+            "8px";
+
+        button.title =
+            chat.title;
+
+        if (
+            chat.id === currentChatId
+        ) {
+
+            button.style.background =
+                "rgba(255,255,255,0.08)";
+        }
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                openCloudChat(
+                    chat.id
+                );
+
+            }
+        );
+
+        list.appendChild(
+            button
+        );
+    });
+}
+
+/* =========================================================
+   LOAD NEWEST CLOUD CHAT
+========================================================= */
+
+async function loadCloudChat() {
+
+    if (
+        !currentUser ||
+        isGuest ||
+        !firebaseDB
+    ) {
+        return;
+    }
+
+    try {
+
+        const snapshot =
+            await firebaseDB
+                .collection("users")
+                .doc(currentUser.uid)
+                .collection("chats")
+                .get();
+
+        if (snapshot.empty) {
+
+            chatHistory = [];
+            currentChatId = null;
+
+            renderMessages();
+            renderChatList();
+
+            return;
+        }
+
+        let newestDoc = null;
+
+        snapshot.forEach(doc => {
+
+            if (!newestDoc) {
+
+                newestDoc = doc;
+                return;
+            }
+
+            const current =
+                doc.data() || {};
+
+            const newest =
+                newestDoc.data() || {};
+
+            const currentTime =
+                current.updatedAt?.seconds || 0;
+
+            const newestTime =
+                newest.updatedAt?.seconds || 0;
+
+            if (
+                currentTime >
+                newestTime
+            ) {
+
+                newestDoc = doc;
+            }
+        });
+
+        if (newestDoc) {
+
+            const data =
+                newestDoc.data() || {};
+
+            currentChatId =
+                newestDoc.id;
+
+            chatHistory =
+                Array.isArray(data.messages)
+                    ? data.messages
+                    : [];
+        }
+
+        renderMessages();
+        renderChatList();
+
+        console.log(
+            "☁️ Newest cloud chat loaded"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "❌ Firestore load error:",
+            error
+        );
+
+        chatHistory = [];
+
+        renderMessages();
+    }
+}
 
 /* =========================================================
    CHAT SETUP
@@ -1016,22 +1084,19 @@ function setupChat() {
     const newChat =
         get("newChatBtn");
 
-
     if (sendButton) {
 
         sendButton.addEventListener(
             "click",
             sendMessage
         );
-
     }
-
 
     if (input) {
 
         input.addEventListener(
             "keydown",
-            (event) => {
+            event => {
 
                 if (
                     event.key === "Enter" &&
@@ -1041,20 +1106,15 @@ function setupChat() {
                     event.preventDefault();
 
                     sendMessage();
-
                 }
-
             }
         );
-
 
         input.addEventListener(
             "input",
             autoResize
         );
-
     }
-
 
     if (newChat) {
 
@@ -1062,14 +1122,10 @@ function setupChat() {
             "click",
             startNewChat
         );
-
     }
 
-
     setupSignOut();
-
 }
-
 
 /* =========================================================
    NEW CHAT
@@ -1077,12 +1133,9 @@ function setupChat() {
 
 function startNewChat() {
 
-    chatHistory =
-        [];
+    chatHistory = [];
 
-    currentChatId =
-        null;
-
+    currentChatId = null;
 
     const messages =
         get("messages");
@@ -1090,48 +1143,37 @@ function startNewChat() {
     const welcome =
         get("welcome");
 
-
     if (messages) {
-
-        messages.innerHTML =
-            "";
-
+        messages.innerHTML = "";
     }
-
 
     if (welcome) {
-
-        welcome.classList.remove(
-            "hidden"
-        );
-
+        welcome.classList.remove("hidden");
     }
 
-
     clearAttachment();
-
 
     if (isGuest) {
 
         saveGuestChat();
-
     }
 
+    renderChatList();
 
     const input =
         get("messageInput");
 
     if (input) {
 
-        input.value =
-            "";
+        input.value = "";
+
+        autoResize();
 
         input.focus();
-
     }
 
+    console.log("🆕 New chat started");
 }
-
 
 /* =========================================================
    SEND MESSAGE
@@ -1143,44 +1185,32 @@ async function sendMessage() {
         return;
     }
 
-
     const input =
         get("messageInput");
-
 
     if (!input) {
         return;
     }
 
-
     const text =
         input.value.trim();
-
 
     if (
         !text &&
         !selectedFile &&
         !selectedImage
     ) {
-
         return;
-
     }
 
+    isSending = true;
 
-    isSending =
-        true;
-
-
-    input.value =
-        "";
+    input.value = "";
 
     autoResize();
 
-
     let displayText =
         text;
-
 
     if (selectedFile) {
 
@@ -1191,9 +1221,7 @@ async function sendMessage() {
                     : ""
             ) +
             `[Attached: ${selectedFile.name}]`;
-
     }
-
 
     if (selectedImage) {
 
@@ -1204,20 +1232,12 @@ async function sendMessage() {
                     : ""
             ) +
             "[Attached image]";
-
     }
 
-
-    chatHistory.push(
-        {
-            role:
-                "user",
-
-            content:
-                displayText
-        }
-    );
-
+    chatHistory.push({
+        role: "user",
+        content: displayText
+    });
 
     hideWelcome();
 
@@ -1226,24 +1246,18 @@ async function sendMessage() {
         displayText
     );
 
-
     if (isGuest) {
-
         saveGuestChat();
-
     }
 
-
-    /*
-    Attachment mode
-    */
+    /* IMAGE */
 
     if (
         selectedImage ||
         (
             selectedFile &&
-            selectedFile.type
-                .startsWith("image/")
+            selectedFile.type &&
+            selectedFile.type.startsWith("image/")
         )
     ) {
 
@@ -1251,23 +1265,19 @@ async function sendMessage() {
             selectedImage ||
             selectedFile;
 
-
         clearAttachment();
-
 
         await processImage(
             file,
             text
         );
 
-
-        isSending =
-            false;
+        isSending = false;
 
         return;
-
     }
 
+    /* PDF */
 
     if (
         selectedFile &&
@@ -1283,107 +1293,86 @@ async function sendMessage() {
         const file =
             selectedFile;
 
-
         clearAttachment();
-
 
         await processPDF(
             file,
             text
         );
 
-
-        isSending =
-            false;
+        isSending = false;
 
         return;
-
     }
 
+    /* OTHER FILE */
 
     if (selectedFile) {
 
         const file =
             selectedFile;
 
-
         clearAttachment();
-
 
         await processFile(
             file,
             text
         );
 
-
-        isSending =
-            false;
+        isSending = false;
 
         return;
-
     }
 
+    /* NORMAL CHAT */
 
     showTyping();
-
 
     try {
 
         const languageElement =
             get("languageSelect");
 
-
         const language =
             languageElement
                 ? languageElement.value
                 : "General";
 
-
         const response =
             await fetch(
                 `${BACKEND_URL}/chat`,
                 {
-                    method:
-                        "POST",
+                    method: "POST",
 
-                    headers:
-                        {
-                            "Content-Type":
-                                "application/json"
-                        },
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
 
                     body:
-                        JSON.stringify(
-                            {
-                                message:
-                                    text,
+                        JSON.stringify({
+                            message: text,
 
-                                language:
-                                    language,
+                            language:
+                                language,
 
-                                history:
-                                    cleanHistory()
-                            }
-                        )
+                            history:
+                                cleanHistory()
+                        })
                 }
             );
-
 
         if (!response.ok) {
 
             throw new Error(
                 `Server returned ${response.status}`
             );
-
         }
-
 
         const data =
             await response.json();
 
-
         removeTyping();
-
 
         const reply =
             data.reply ||
@@ -1391,34 +1380,17 @@ async function sendMessage() {
             data.message ||
             "I couldn't generate a response.";
 
-
-        chatHistory.push(
-            {
-                role:
-                    "assistant",
-
-                content:
-                    reply
-            }
-        );
-
+        chatHistory.push({
+            role: "assistant",
+            content: reply
+        });
 
         addMessage(
             "assistant",
             reply
         );
 
-
-        if (isGuest) {
-
-            saveGuestChat();
-
-        } else {
-
-            await saveCloudChat();
-
-        }
-
+        await saveCurrentChat();
 
     } catch (error) {
 
@@ -1427,49 +1399,26 @@ async function sendMessage() {
             error
         );
 
-
         removeTyping();
-
 
         const errorText =
             "Sorry bro, CodeAI couldn't connect to the AI server right now.";
 
-
-        chatHistory.push(
-            {
-                role:
-                    "assistant",
-
-                content:
-                    errorText
-            }
-        );
-
+        chatHistory.push({
+            role: "assistant",
+            content: errorText
+        });
 
         addMessage(
             "assistant",
             errorText
         );
 
-
-        if (isGuest) {
-
-            saveGuestChat();
-
-        } else {
-
-            await saveCloudChat();
-
-        }
-
+        await saveCurrentChat();
     }
 
-
-    isSending =
-        false;
-
+    isSending = false;
 }
-
 
 /* =========================================================
    ADD MESSAGE
@@ -1483,30 +1432,19 @@ function addMessage(
     const container =
         get("messages");
 
-
     if (!container) {
         return;
     }
 
-
     const welcome =
         get("welcome");
 
-
     if (welcome) {
-
-        welcome.classList.add(
-            "hidden"
-        );
-
+        welcome.classList.add("hidden");
     }
 
-
     const wrapper =
-        document.createElement(
-            "div"
-        );
-
+        document.createElement("div");
 
     wrapper.className =
         `message ${
@@ -1515,46 +1453,33 @@ function addMessage(
                 : "assistant-message"
         }`;
 
-
     const bubble =
-        document.createElement(
-            "div"
-        );
-
+        document.createElement("div");
 
     bubble.className =
         "message-bubble";
 
-
     if (role === "assistant") {
 
         bubble.innerHTML =
-            formatAIText(
-                content
-            );
+            formatAIText(content);
 
     } else {
 
         bubble.textContent =
             content;
-
     }
-
 
     wrapper.appendChild(
         bubble
     );
 
-
     container.appendChild(
         wrapper
     );
 
-
     scrollToBottom();
-
 }
-
 
 /* =========================================================
    RENDER SAVED MESSAGES
@@ -1568,15 +1493,11 @@ function renderMessages() {
     const welcome =
         get("welcome");
 
-
     if (!container) {
         return;
     }
 
-
-    container.innerHTML =
-        "";
-
+    container.innerHTML = "";
 
     if (
         !chatHistory ||
@@ -1584,43 +1505,36 @@ function renderMessages() {
     ) {
 
         if (welcome) {
-
-            welcome.classList.remove(
-                "hidden"
-            );
-
+            welcome.classList.remove("hidden");
         }
 
         return;
-
     }
-
 
     if (welcome) {
-
-        welcome.classList.add(
-            "hidden"
-        );
-
+        welcome.classList.add("hidden");
     }
-
 
     chatHistory.forEach(
         message => {
+
+            if (
+                !message ||
+                !message.role ||
+                typeof message.content !== "string"
+            ) {
+                return;
+            }
 
             addMessage(
                 message.role,
                 message.content
             );
-
         }
     );
 
-
     scrollToBottom();
-
 }
-
 
 /* =========================================================
    HIDE WELCOME
@@ -1632,15 +1546,9 @@ function hideWelcome() {
         get("welcome");
 
     if (welcome) {
-
-        welcome.classList.add(
-            "hidden"
-        );
-
+        welcome.classList.add("hidden");
     }
-
 }
-
 
 /* =========================================================
    TYPING
@@ -1650,73 +1558,51 @@ function showTyping() {
 
     removeTyping();
 
-
     const container =
         get("messages");
-
 
     if (!container) {
         return;
     }
 
-
     const wrapper =
-        document.createElement(
-            "div"
-        );
-
+        document.createElement("div");
 
     wrapper.id =
         "codeaiTyping";
 
-
     wrapper.className =
         "message assistant-message";
 
-
     const bubble =
-        document.createElement(
-            "div"
-        );
-
+        document.createElement("div");
 
     bubble.className =
         "message-bubble";
 
-
     bubble.textContent =
         "CodeAI is thinking...";
-
 
     wrapper.appendChild(
         bubble
     );
 
-
     container.appendChild(
         wrapper
     );
 
-
     scrollToBottom();
-
 }
-
 
 function removeTyping() {
 
     const typing =
         get("codeaiTyping");
 
-
     if (typing) {
-
         typing.remove();
-
     }
-
 }
-
 
 /* =========================================================
    SCROLL
@@ -1727,24 +1613,17 @@ function scrollToBottom() {
     const container =
         get("messages");
 
-
     if (!container) {
         return;
     }
 
+    setTimeout(() => {
 
-    setTimeout(
-        () => {
+        container.scrollTop =
+            container.scrollHeight;
 
-            container.scrollTop =
-                container.scrollHeight;
-
-        },
-        30
-    );
-
+    }, 30);
 }
-
 
 /* =========================================================
    AUTO RESIZE
@@ -1755,24 +1634,19 @@ function autoResize() {
     const input =
         get("messageInput");
 
-
     if (!input) {
         return;
     }
 
-
     input.style.height =
         "auto";
-
 
     input.style.height =
         Math.min(
             input.scrollHeight,
             180
         ) + "px";
-
 }
-
 
 /* =========================================================
    ATTACHMENTS
@@ -1798,7 +1672,6 @@ function setupAttachments() {
     const remove =
         get("removeAttachmentBtn");
 
-
     if (
         attach &&
         fileInput
@@ -1809,12 +1682,9 @@ function setupAttachments() {
             () => {
 
                 fileInput.click();
-
             }
         );
-
     }
-
 
     if (
         camera &&
@@ -1826,12 +1696,9 @@ function setupAttachments() {
             () => {
 
                 cameraInput.click();
-
             }
         );
-
     }
-
 
     if (fileInput) {
 
@@ -1842,11 +1709,9 @@ function setupAttachments() {
                 const file =
                     fileInput.files?.[0];
 
-
                 if (!file) {
                     return;
                 }
-
 
                 selectedFile =
                     file;
@@ -1854,16 +1719,12 @@ function setupAttachments() {
                 selectedImage =
                     null;
 
-
                 showAttachment(
                     file
                 );
-
             }
         );
-
     }
-
 
     if (imageInput) {
 
@@ -1874,11 +1735,9 @@ function setupAttachments() {
                 const file =
                     imageInput.files?.[0];
 
-
                 if (!file) {
                     return;
                 }
-
 
                 selectedImage =
                     file;
@@ -1886,16 +1745,12 @@ function setupAttachments() {
                 selectedFile =
                     null;
 
-
                 showAttachment(
                     file
                 );
-
             }
         );
-
     }
-
 
     if (cameraInput) {
 
@@ -1906,11 +1761,9 @@ function setupAttachments() {
                 const file =
                     cameraInput.files?.[0];
 
-
                 if (!file) {
                     return;
                 }
-
 
                 selectedImage =
                     file;
@@ -1918,17 +1771,13 @@ function setupAttachments() {
                 selectedFile =
                     null;
 
-
                 showAttachment(
                     file,
                     true
                 );
-
             }
         );
-
     }
-
 
     if (remove) {
 
@@ -1936,11 +1785,8 @@ function setupAttachments() {
             "click",
             clearAttachment
         );
-
     }
-
 }
-
 
 /* =========================================================
    SHOW ATTACHMENT
@@ -1960,15 +1806,12 @@ function showAttachment(
     const type =
         get("attachmentType");
 
-
     if (preview) {
 
         preview.classList.remove(
             "hidden"
         );
-
     }
-
 
     if (name) {
 
@@ -1976,20 +1819,15 @@ function showAttachment(
             camera
                 ? "Camera photo"
                 : file.name;
-
     }
-
 
     if (type) {
 
         type.textContent =
             file.type ||
             "Attachment";
-
     }
-
 }
-
 
 /* =========================================================
    CLEAR ATTACHMENT
@@ -1997,12 +1835,8 @@ function showAttachment(
 
 function clearAttachment() {
 
-    selectedFile =
-        null;
-
-    selectedImage =
-        null;
-
+    selectedFile = null;
+    selectedImage = null;
 
     const fileInput =
         get("fileInput");
@@ -2013,64 +1847,45 @@ function clearAttachment() {
     const imageInput =
         get("imageInput");
 
-
     if (fileInput) {
-        fileInput.value =
-            "";
+        fileInput.value = "";
     }
 
     if (cameraInput) {
-        cameraInput.value =
-            "";
+        cameraInput.value = "";
     }
 
     if (imageInput) {
-        imageInput.value =
-            "";
+        imageInput.value = "";
     }
-
 
     const preview =
         get("attachmentPreview");
-
 
     if (preview) {
 
         preview.classList.add(
             "hidden"
         );
-
     }
-
 
     const name =
         get("attachmentName");
 
-
     if (name) {
-
-        name.textContent =
-            "";
-
+        name.textContent = "";
     }
-
 
     const type =
         get("attachmentType");
 
-
     if (type) {
-
-        type.textContent =
-            "";
-
+        type.textContent = "";
     }
-
 }
 
-
 /* =========================================================
-   IMAGE
+   IMAGE / VISION
 ========================================================= */
 
 async function processImage(
@@ -2080,102 +1895,98 @@ async function processImage(
 
     showTyping();
 
-
     try {
 
         const form =
             new FormData();
-
 
         form.append(
             "file",
             file
         );
 
-
         form.append(
             "message",
             question ||
-                "Analyze this image."
+                "Analyze this image carefully."
         );
-
 
         const response =
             await fetch(
                 `${BACKEND_URL}/vision`,
                 {
-                    method:
-                        "POST",
-
-                    body:
-                        form
+                    method: "POST",
+                    body: form
                 }
             );
 
-
         if (!response.ok) {
 
+            let detail = "";
+
+            try {
+
+                const errorData =
+                    await response.json();
+
+                detail =
+                    errorData.detail || "";
+
+            } catch (_) {}
+
             throw new Error(
-                `Vision server returned ${response.status}`
+                `Vision server returned ${response.status} ${detail}`
             );
-
         }
-
 
         const data =
             await response.json();
 
-
         removeTyping();
-
 
         const reply =
             data.reply ||
             data.response ||
             data.description ||
-            "Image analyzed.";
+            "I couldn't understand the image.";
 
-
-        chatHistory.push(
-            {
-                role:
-                    "assistant",
-
-                content:
-                    reply
-            }
-        );
-
+        chatHistory.push({
+            role: "assistant",
+            content: reply
+        });
 
         addMessage(
             "assistant",
             reply
         );
 
-
         await saveCurrentChat();
-
 
     } catch (error) {
 
         removeTyping();
 
-
         console.error(
-            "Image error:",
+            "❌ Image error:",
             error
         );
 
+        const errorText =
+            "I couldn't analyze that image right now. Please try again.";
+
+        chatHistory.push({
+            role: "assistant",
+            content: errorText
+        });
 
         addMessage(
             "assistant",
-            "I couldn't analyze that image."
+            errorText
         );
 
+        await saveCurrentChat();
     }
-
 }
-
 
 /* =========================================================
    PDF
@@ -2188,102 +1999,103 @@ async function processPDF(
 
     showTyping();
 
-
     try {
 
         const form =
             new FormData();
-
 
         form.append(
             "file",
             file
         );
 
-
-        form.append(
-            "message",
-            question ||
-                "Read and summarize this PDF."
-        );
-
-
         const response =
             await fetch(
                 `${BACKEND_URL}/read-pdf`,
                 {
-                    method:
-                        "POST",
-
-                    body:
-                        form
+                    method: "POST",
+                    body: form
                 }
             );
-
 
         if (!response.ok) {
 
             throw new Error(
                 `PDF server returned ${response.status}`
             );
-
         }
-
 
         const data =
             await response.json();
 
-
         removeTyping();
 
-
-        const reply =
+        let reply =
             data.reply ||
             data.response ||
             data.text ||
-            "PDF processed.";
+            "";
 
+        /*
+           The current backend returns extracted PDF
+           content as "content".
+        */
 
-        chatHistory.push(
-            {
-                role:
-                    "assistant",
+        if (!reply && data.content) {
 
-                content:
-                    reply
-            }
-        );
+            const instruction =
+                question ||
+                "Read this PDF.";
 
+            reply =
+                `${instruction}\n\n` +
+                `PDF: ${data.filename || file.name}\n\n` +
+                data.content;
+        }
+
+        if (!reply) {
+
+            reply =
+                "PDF processed, but no readable text was found.";
+        }
+
+        chatHistory.push({
+            role: "assistant",
+            content: reply
+        });
 
         addMessage(
             "assistant",
             reply
         );
 
-
         await saveCurrentChat();
-
 
     } catch (error) {
 
         removeTyping();
 
-
         console.error(
-            "PDF error:",
+            "❌ PDF error:",
             error
         );
 
+        const errorText =
+            "I couldn't read that PDF right now.";
+
+        chatHistory.push({
+            role: "assistant",
+            content: errorText
+        });
 
         addMessage(
             "assistant",
-            "I couldn't read that PDF."
+            errorText
         );
 
+        await saveCurrentChat();
     }
-
 }
-
 
 /* =========================================================
    OTHER FILES
@@ -2296,102 +2108,98 @@ async function processFile(
 
     showTyping();
 
-
     try {
 
         const form =
             new FormData();
-
 
         form.append(
             "file",
             file
         );
 
-
-        form.append(
-            "message",
-            question ||
-                "Read this file and explain it."
-        );
-
-
         const response =
             await fetch(
                 `${BACKEND_URL}/read-file`,
                 {
-                    method:
-                        "POST",
-
-                    body:
-                        form
+                    method: "POST",
+                    body: form
                 }
             );
-
 
         if (!response.ok) {
 
             throw new Error(
                 `File server returned ${response.status}`
             );
-
         }
-
 
         const data =
             await response.json();
 
-
         removeTyping();
 
-
-        const reply =
+        let reply =
             data.reply ||
             data.response ||
             data.text ||
-            "File processed.";
+            "";
 
+        if (!reply && data.content) {
 
-        chatHistory.push(
-            {
-                role:
-                    "assistant",
+            const instruction =
+                question ||
+                "Read this file and explain it.";
 
-                content:
-                    reply
-            }
-        );
+            reply =
+                `${instruction}\n\n` +
+                `File: ${data.filename || file.name}\n\n` +
+                data.content;
+        }
 
+        if (!reply) {
+
+            reply =
+                "File received successfully.";
+        }
+
+        chatHistory.push({
+            role: "assistant",
+            content: reply
+        });
 
         addMessage(
             "assistant",
             reply
         );
 
-
         await saveCurrentChat();
-
 
     } catch (error) {
 
         removeTyping();
 
-
         console.error(
-            "File error:",
+            "❌ File error:",
             error
         );
 
+        const errorText =
+            "I couldn't read that file right now.";
+
+        chatHistory.push({
+            role: "assistant",
+            content: errorText
+        });
 
         addMessage(
             "assistant",
-            "I couldn't read that file."
+            errorText
         );
 
+        await saveCurrentChat();
     }
-
 }
-
 
 /* =========================================================
    SAVE CURRENT CHAT
@@ -2403,14 +2211,11 @@ async function saveCurrentChat() {
 
         saveGuestChat();
 
-    } else {
+    } else if (currentUser) {
 
         await saveCloudChat();
-
     }
-
 }
-
 
 /* =========================================================
    MICROPHONE
@@ -2421,16 +2226,13 @@ function setupMicrophone() {
     const button =
         get("micBtn");
 
-
     if (!button) {
         return;
     }
 
-
     const SpeechRecognition =
         window.SpeechRecognition ||
         window.webkitSpeechRecognition;
-
 
     if (!SpeechRecognition) {
 
@@ -2439,25 +2241,19 @@ function setupMicrophone() {
         );
 
         return;
-
     }
-
 
     const recognition =
         new SpeechRecognition();
 
-
     recognition.lang =
         "en-IN";
-
 
     recognition.continuous =
         false;
 
-
     recognition.interimResults =
         false;
-
 
     recognition.onstart =
         () => {
@@ -2465,9 +2261,7 @@ function setupMicrophone() {
             button.classList.add(
                 "active"
             );
-
         };
-
 
     recognition.onend =
         () => {
@@ -2475,12 +2269,10 @@ function setupMicrophone() {
             button.classList.remove(
                 "active"
             );
-
         };
 
-
     recognition.onerror =
-        (error) => {
+        error => {
 
             console.error(
                 "Microphone error:",
@@ -2490,21 +2282,17 @@ function setupMicrophone() {
             button.classList.remove(
                 "active"
             );
-
         };
 
-
     recognition.onresult =
-        (event) => {
+        event => {
 
             const text =
                 event.results[0][0]
                     .transcript;
 
-
             const input =
                 get("messageInput");
-
 
             if (input) {
 
@@ -2513,17 +2301,14 @@ function setupMicrophone() {
                         input.value
                             ? " "
                             : ""
-                    ) + text;
-
+                    ) +
+                    text;
 
                 autoResize();
 
                 input.focus();
-
             }
-
         };
-
 
     button.addEventListener(
         "click",
@@ -2538,14 +2323,10 @@ function setupMicrophone() {
                 console.log(
                     "Microphone already running."
                 );
-
             }
-
         }
     );
-
 }
-
 
 /* =========================================================
    SUGGESTIONS
@@ -2556,39 +2337,28 @@ function setupSuggestions() {
     const input =
         get("messageInput");
 
-
     if (!input) {
         return;
     }
 
-
     document
-        .querySelectorAll(
-            ".suggestion"
-        )
-        .forEach(
-            button => {
+        .querySelectorAll(".suggestion")
+        .forEach(button => {
 
-                button.addEventListener(
-                    "click",
-                    () => {
+            button.addEventListener(
+                "click",
+                () => {
 
-                        input.value =
-                            button.textContent
-                                .trim();
+                    input.value =
+                        button.textContent.trim();
 
-                        autoResize();
+                    autoResize();
 
-                        input.focus();
-
-                    }
-                );
-
-            }
-        );
-
+                    input.focus();
+                }
+            );
+        });
 }
-
 
 /* =========================================================
    MODE SELECTOR
@@ -2602,16 +2372,12 @@ function setupModeSelector() {
     const input =
         get("messageInput");
 
-
     if (
         !select ||
         !input
     ) {
-
         return;
-
     }
-
 
     select.addEventListener(
         "change",
@@ -2619,7 +2385,6 @@ function setupModeSelector() {
 
             const mode =
                 select.value;
-
 
             if (
                 mode &&
@@ -2633,14 +2398,10 @@ function setupModeSelector() {
 
                 input.placeholder =
                     "Ask CodeAI anything...";
-
             }
-
         }
     );
-
 }
-
 
 /* =========================================================
    SIDEBAR
@@ -2654,16 +2415,12 @@ function setupSidebar() {
     const sidebar =
         get("sidebar");
 
-
     if (
         !menu ||
         !sidebar
     ) {
-
         return;
-
     }
-
 
     menu.addEventListener(
         "click",
@@ -2672,12 +2429,9 @@ function setupSidebar() {
             sidebar.classList.toggle(
                 "open"
             );
-
         }
     );
-
 }
-
 
 /* =========================================================
    ABOUT
@@ -2688,11 +2442,9 @@ function setupAbout() {
     const button =
         get("aboutBtn");
 
-
     if (!button) {
         return;
     }
-
 
     button.addEventListener(
         "click",
@@ -2705,12 +2457,9 @@ function setupAbout() {
                 "VARAD WANSAGAR sir created me.\n\n" +
                 "Free mode: No subscriptions, no ads and no payments."
             );
-
         }
     );
-
 }
-
 
 /* =========================================================
    FORMAT AI TEXT
@@ -2722,22 +2471,17 @@ function formatAIText(text) {
         text === null ||
         text === undefined
     ) {
-
         return "";
-
     }
-
 
     let value =
         String(text);
 
-
     value =
         escapeHTML(value);
 
-
     /*
-    Code blocks
+       CODE BLOCKS
     */
 
     value =
@@ -2753,11 +2497,11 @@ function formatAIText(text) {
                     language ||
                     "code";
 
-
                 return `
                     <div class="code-block">
                         <div class="code-header">
                             <span>${lang}</span>
+
                             <button
                                 class="copy-code"
                                 onclick="copyCode(this)"
@@ -2765,16 +2509,15 @@ function formatAIText(text) {
                                 Copy
                             </button>
                         </div>
+
                         <pre><code>${code.trim()}</code></pre>
                     </div>
                 `;
-
             }
         );
 
-
     /*
-    Bold
+       BOLD
     */
 
     value =
@@ -2783,9 +2526,8 @@ function formatAIText(text) {
             "<strong>$1</strong>"
         );
 
-
     /*
-    Inline code
+       INLINE CODE
     */
 
     value =
@@ -2794,9 +2536,8 @@ function formatAIText(text) {
             '<code class="inline-code">$1</code>'
         );
 
-
     /*
-    New lines
+       NEW LINES
     */
 
     value =
@@ -2805,11 +2546,8 @@ function formatAIText(text) {
             "<br>"
         );
 
-
     return value;
-
 }
-
 
 /* =========================================================
    ESCAPE HTML
@@ -2840,9 +2578,7 @@ function escapeHTML(value) {
             /'/g,
             "&#039;"
         );
-
 }
-
 
 /* =========================================================
    COPY CODE
@@ -2853,36 +2589,28 @@ async function copyCode(button) {
     try {
 
         const block =
-            button
-                .closest(
-                    ".code-block"
-                );
-
+            button.closest(
+                ".code-block"
+            );
 
         const code =
-            block
-                ?.querySelector(
-                    "code"
-                );
-
+            block?.querySelector(
+                "code"
+            );
 
         if (!code) {
             return;
         }
 
-
         await navigator.clipboard.writeText(
             code.textContent
         );
 
-
         const oldText =
             button.textContent;
 
-
         button.textContent =
             "Copied!";
-
 
         setTimeout(
             () => {
@@ -2894,18 +2622,14 @@ async function copyCode(button) {
             1200
         );
 
-
     } catch (error) {
 
         console.error(
             "Copy error:",
             error
         );
-
     }
-
 }
-
 
 /* =========================================================
    GLOBAL FUNCTIONS
@@ -2928,3 +2652,9 @@ window.clearAttachment =
 
 window.copyCode =
     copyCode;
+
+window.openCloudChat =
+    openCloudChat;
+
+window.loadChatList =
+    loadChatList;
