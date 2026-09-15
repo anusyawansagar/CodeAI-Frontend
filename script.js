@@ -24,6 +24,7 @@ const accountAvatar = document.getElementById("accountAvatar");
 const signOutBtn = document.getElementById("signOutBtn");
 
 const newChatBtn = document.getElementById("newChatBtn");
+
 const messages = document.getElementById("messages");
 const welcome = document.getElementById("welcome");
 
@@ -59,7 +60,6 @@ const aboutBtn =
 const menuBtn =
     document.getElementById("menuBtn");
 
-
 /* =========================================================
    FIREBASE
    ========================================================= */
@@ -82,7 +82,6 @@ const db =
 let googleProvider = null;
 
 if (firebaseReady && auth) {
-
     googleProvider =
         new firebase.auth.GoogleAuthProvider();
 
@@ -91,63 +90,54 @@ if (firebaseReady && auth) {
     });
 }
 
-
 /* =========================================================
    STATE
    ========================================================= */
 
 let currentUser = null;
-
 let guestMode = false;
 
 let currentChatId = null;
-
 let currentChat = [];
 
 let selectedFiles = [];
 
 let isSending = false;
-
 let recognition = null;
-
 
 /* =========================================================
    STORAGE
    ========================================================= */
 
-const GUEST_STORAGE_KEY =
-    "codeai_guest_chats";
+const GUEST_STORAGE_KEY = "codeai_guest_chats";
 
 function loadGuestChats() {
-
     try {
-
         return JSON.parse(
             localStorage.getItem(GUEST_STORAGE_KEY)
         ) || {};
-
-    } catch {
-
+    } catch (error) {
+        console.error("Guest storage error:", error);
         return {};
-
     }
 }
 
 function saveGuestChats(chats) {
-
-    localStorage.setItem(
-        GUEST_STORAGE_KEY,
-        JSON.stringify(chats)
-    );
+    try {
+        localStorage.setItem(
+            GUEST_STORAGE_KEY,
+            JSON.stringify(chats)
+        );
+    } catch (error) {
+        console.error("Guest save error:", error);
+    }
 }
-
 
 /* =========================================================
    HTML SAFETY
    ========================================================= */
 
 function escapeHTML(value) {
-
     return String(value ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -156,9 +146,7 @@ function escapeHTML(value) {
         .replace(/'/g, "&#039;");
 }
 
-
 function formatAIText(value) {
-
     let output = escapeHTML(value);
 
     output = output.replace(
@@ -179,13 +167,11 @@ function formatAIText(value) {
     return output;
 }
 
-
 /* =========================================================
    UI
    ========================================================= */
 
 function showGateway() {
-
     if (gateway) {
         gateway.classList.remove("hidden");
     }
@@ -195,9 +181,7 @@ function showGateway() {
     }
 }
 
-
 function showApp() {
-
     if (gateway) {
         gateway.classList.add("hidden");
     }
@@ -207,89 +191,64 @@ function showApp() {
     }
 }
 
-
 function scrollBottom() {
-
     if (messages) {
-
-        messages.scrollTop =
-            messages.scrollHeight;
-
+        messages.scrollTop = messages.scrollHeight;
     }
 }
 
-
 function hideWelcome() {
-
     if (welcome) {
         welcome.style.display = "none";
     }
 }
 
-
 function showWelcome() {
-
     if (welcome) {
         welcome.style.display = "";
     }
 }
-
 
 /* =========================================================
    MESSAGE UI
    ========================================================= */
 
 function addMessage(role, text, extra = {}) {
-
     hideWelcome();
 
-    const wrapper =
-        document.createElement("div");
+    if (!messages) {
+        return null;
+    }
+
+    const wrapper = document.createElement("div");
 
     wrapper.className =
         `message ${role}`;
 
-    const bubble =
-        document.createElement("div");
+    const bubble = document.createElement("div");
 
-    bubble.className =
-        "message-bubble";
+    bubble.className = "message-bubble";
 
-    if (role === "user") {
-
-        bubble.innerHTML =
-            formatAIText(text);
-
-    } else {
-
-        bubble.innerHTML =
-            formatAIText(text);
-
-    }
+    bubble.innerHTML = formatAIText(text);
 
     wrapper.appendChild(bubble);
 
     if (extra.files && extra.files.length) {
-
         const filesBox =
             document.createElement("div");
 
-        filesBox.className =
-            "message-files";
+        filesBox.className = "message-files";
 
         extra.files.forEach(file => {
-
             const item =
                 document.createElement("div");
 
-            item.className =
-                "message-file";
+            item.className = "message-file";
 
             item.textContent =
                 `📎 ${file.name}`;
 
             filesBox.appendChild(item);
-
         });
 
         wrapper.appendChild(filesBox);
@@ -302,10 +261,12 @@ function addMessage(role, text, extra = {}) {
     return wrapper;
 }
 
-
 function addThinking() {
-
     hideWelcome();
+
+    if (!messages) {
+        return null;
+    }
 
     const wrapper =
         document.createElement("div");
@@ -334,9 +295,7 @@ function addThinking() {
     return wrapper;
 }
 
-
 function removeThinking() {
-
     const item =
         document.getElementById(
             "codeai-thinking"
@@ -347,13 +306,11 @@ function removeThinking() {
     }
 }
 
-
 /* =========================================================
    CHAT ID
    ========================================================= */
 
 function createChatId() {
-
     return (
         Date.now().toString(36) +
         Math.random()
@@ -362,13 +319,11 @@ function createChatId() {
     );
 }
 
-
 /* =========================================================
    CHAT TITLE
    ========================================================= */
 
 function makeChatTitle(text) {
-
     const clean =
         String(text || "")
             .replace(/\s+/g, " ")
@@ -383,13 +338,11 @@ function makeChatTitle(text) {
         : clean;
 }
 
-
 /* =========================================================
    LOCAL CHAT SAVE
    ========================================================= */
 
 function saveGuestChat() {
-
     if (!guestMode || !currentChatId) {
         return;
     }
@@ -398,7 +351,6 @@ function saveGuestChat() {
         loadGuestChats();
 
     chats[currentChatId] = {
-
         id: currentChatId,
 
         title:
@@ -418,63 +370,61 @@ function saveGuestChat() {
     saveGuestChats(chats);
 }
 
-
 /* =========================================================
    FIRESTORE
    ========================================================= */
 
 async function saveCloudChat() {
-
-    if (!currentUser || !db || !currentChatId) {
+    if (
+        !currentUser ||
+        !db ||
+        !currentChatId
+    ) {
         return;
     }
 
     try {
-
         await db
             .collection("users")
             .doc(currentUser.uid)
             .collection("chats")
             .doc(currentChatId)
-            .set({
+            .set(
+                {
+                    title:
+                        currentChat[0]?.text
+                            ? makeChatTitle(
+                                currentChat[0].text
+                            )
+                            : "New Chat",
 
-                title:
-                    currentChat[0]?.text
-                        ? makeChatTitle(
-                            currentChat[0].text
-                        )
-                        : "New Chat",
+                    messages:
+                        currentChat,
 
-                messages:
-                    currentChat,
-
-                updatedAt:
-                    firebase.firestore.FieldValue
-                        .serverTimestamp()
-
-            }, {
-                merge: true
-            });
+                    updatedAt:
+                        firebase.firestore
+                            .FieldValue
+                            .serverTimestamp()
+                },
+                {
+                    merge: true
+                }
+            );
 
     } catch (error) {
-
         console.error(
             "Firestore save error:",
             error
         );
-
     }
 }
 
-
 async function loadCloudChats() {
-
     if (!currentUser || !db) {
         return [];
     }
 
     try {
-
         const snapshot =
             await db
                 .collection("users")
@@ -494,24 +444,20 @@ async function loadCloudChats() {
         );
 
     } catch (error) {
-
         console.error(
             "Firestore load error:",
             error
         );
 
         return [];
-
     }
 }
-
 
 /* =========================================================
    NEW CHAT
    ========================================================= */
 
 function startNewChat() {
-
     currentChatId =
         createChatId();
 
@@ -526,13 +472,11 @@ function startNewChat() {
     clearAttachments();
 }
 
-
 /* =========================================================
    LOAD CHAT
    ========================================================= */
 
 function loadChat(chat) {
-
     if (!chat) {
         return;
     }
@@ -541,23 +485,22 @@ function loadChat(chat) {
         chat.id;
 
     currentChat =
-        chat.messages || [];
+        Array.isArray(chat.messages)
+            ? chat.messages
+            : [];
 
     if (messages) {
         messages.innerHTML = "";
     }
 
     if (!currentChat.length) {
-
         showWelcome();
-
         return;
     }
 
     hideWelcome();
 
     currentChat.forEach(item => {
-
         addMessage(
             item.role,
             item.text,
@@ -566,19 +509,15 @@ function loadChat(chat) {
                     item.files || []
             }
         );
-
     });
 }
-
 
 /* =========================================================
    ACCOUNT UI
    ========================================================= */
 
 function updateAccountUI(user) {
-
     if (!user) {
-
         if (accountName) {
             accountName.textContent =
                 "Guest";
@@ -598,11 +537,9 @@ function updateAccountUI(user) {
     }
 
     if (accountName) {
-
         accountName.textContent =
             user.displayName ||
             "Google User";
-
     }
 
     if (accountType) {
@@ -611,16 +548,12 @@ function updateAccountUI(user) {
     }
 
     if (accountAvatar) {
-
         if (user.photoURL) {
-
             accountAvatar.innerHTML =
                 `<img src="${escapeHTML(
                     user.photoURL
                 )}" alt="Account">`;
-
         } else {
-
             accountAvatar.textContent =
                 (
                     user.displayName ||
@@ -628,29 +561,23 @@ function updateAccountUI(user) {
                 )
                 .charAt(0)
                 .toUpperCase();
-
         }
     }
 }
-
 
 /* =========================================================
    GOOGLE LOGIN
    ========================================================= */
 
 async function loginWithGoogle() {
-
     if (!auth || !googleProvider) {
-
         alert(
             "Firebase is not configured correctly."
         );
-
         return;
     }
 
     try {
-
         const result =
             await auth.signInWithPopup(
                 googleProvider
@@ -675,26 +602,23 @@ async function loginWithGoogle() {
         );
 
     } catch (error) {
-
         console.error(
             "Google login error:",
             error
         );
 
         alert(
-            "Google login failed: " +
+            "Google login failed:\n\n" +
             error.message
         );
     }
 }
-
 
 /* =========================================================
    GUEST
    ========================================================= */
 
 function enterGuestMode() {
-
     currentUser = null;
 
     guestMode = true;
@@ -706,46 +630,35 @@ function enterGuestMode() {
     startNewChat();
 }
 
-
 /* =========================================================
    SIGN OUT
    ========================================================= */
 
 async function signOut() {
-
     try {
-
         if (auth && currentUser) {
             await auth.signOut();
         }
-
     } catch (error) {
-
         console.error(
             "Sign out error:",
             error
         );
-
     }
 
     currentUser = null;
-
     guestMode = false;
-
     currentChat = [];
-
     currentChatId = null;
 
     showGateway();
 }
-
 
 /* =========================================================
    FILE HELPERS
    ========================================================= */
 
 function getFileExtension(name) {
-
     const parts =
         String(name)
             .split(".");
@@ -755,12 +668,9 @@ function getFileExtension(name) {
         : "";
 }
 
-
 function isImageFile(file) {
-
     return (
-        file.type.startsWith("image/")
-        ||
+        file.type.startsWith("image/") ||
         [
             "png",
             "jpg",
@@ -773,12 +683,9 @@ function isImageFile(file) {
     );
 }
 
-
 function isVideoFile(file) {
-
     return (
-        file.type.startsWith("video/")
-        ||
+        file.type.startsWith("video/") ||
         [
             "mp4",
             "webm",
@@ -791,25 +698,19 @@ function isVideoFile(file) {
     );
 }
 
-
 function isPDF(file) {
-
     return (
-        file.type === "application/pdf"
-        ||
+        file.type === "application/pdf" ||
         getFileExtension(file.name) === "pdf"
     );
 }
 
-
 function isTextFile(file) {
-
     const ext =
         getFileExtension(file.name);
 
     return (
-        file.type.startsWith("text/")
-        ||
+        file.type.startsWith("text/") ||
         [
             "txt",
             "md",
@@ -843,19 +744,16 @@ function isTextFile(file) {
     );
 }
 
-
 /* =========================================================
    FILE PREVIEW
    ========================================================= */
 
 function updateAttachmentPreview() {
-
     if (!attachmentPreview) {
         return;
     }
 
     if (!selectedFiles.length) {
-
         attachmentPreview.classList.add(
             "hidden"
         );
@@ -868,29 +766,23 @@ function updateAttachmentPreview() {
     );
 
     if (attachmentName) {
-
         attachmentName.textContent =
             selectedFiles.length === 1
                 ? selectedFiles[0].name
                 : `${selectedFiles.length} files selected`;
-
     }
 
     if (attachmentType) {
-
         attachmentType.textContent =
             selectedFiles
                 .map(file =>
                     getFriendlyFileType(file)
                 )
                 .join(", ");
-
     }
 }
 
-
 function getFriendlyFileType(file) {
-
     if (isImageFile(file)) {
         return "Image";
     }
@@ -910,19 +802,16 @@ function getFriendlyFileType(file) {
     return file.type || "File";
 }
 
-
 /* =========================================================
    ATTACH FILES
    ========================================================= */
 
 function addFiles(files) {
-
     if (!files || !files.length) {
         return;
     }
 
     for (const file of files) {
-
         const alreadyExists =
             selectedFiles.some(
                 existing =>
@@ -940,13 +829,11 @@ function addFiles(files) {
     updateAttachmentPreview();
 }
 
-
 /* =========================================================
    CLEAR ATTACHMENTS
    ========================================================= */
 
 function clearAttachments() {
-
     selectedFiles = [];
 
     if (fileInput) {
@@ -964,29 +851,22 @@ function clearAttachments() {
     updateAttachmentPreview();
 }
 
-
 /* =========================================================
    READ TEXT FILE
    ========================================================= */
 
 async function readTextFile(file) {
-
     try {
-
         return await file.text();
-
     } catch (error) {
-
         console.error(
             "Text read error:",
             error
         );
 
         return "";
-
     }
 }
-
 
 /* =========================================================
    SEND FILE TO BACKEND
@@ -996,7 +876,6 @@ async function sendFileToBackend(
     endpoint,
     file
 ) {
-
     const formData =
         new FormData();
 
@@ -1015,7 +894,6 @@ async function sendFileToBackend(
         );
 
     if (!response.ok) {
-
         throw new Error(
             `File endpoint returned ${response.status}`
         );
@@ -1024,25 +902,19 @@ async function sendFileToBackend(
     return await response.json();
 }
 
-
 /* =========================================================
    PREPARE FILE CONTEXT
    ========================================================= */
 
 async function prepareFilesForAI(files) {
-
     const fileContext = [];
 
     const visionFiles = [];
-
     const pdfFiles = [];
-
     const otherFiles = [];
 
     for (const file of files) {
-
         if (isTextFile(file)) {
-
             const text =
                 await readTextFile(file);
 
@@ -1056,31 +928,24 @@ async function prepareFilesForAI(files) {
         }
 
         if (isImageFile(file)) {
-
             visionFiles.push(file);
-
             continue;
         }
 
         if (isPDF(file)) {
-
             pdfFiles.push(file);
-
             continue;
         }
 
         otherFiles.push(file);
     }
 
-
-    /* -----------------------------------------------------
+    /* =====================================================
        PDF
-       ----------------------------------------------------- */
+       ===================================================== */
 
     for (const file of pdfFiles) {
-
         try {
-
             const result =
                 await sendFileToBackend(
                     "/read-file",
@@ -1088,48 +953,36 @@ async function prepareFilesForAI(files) {
                 );
 
             fileContext.push({
-
                 name: file.name,
-
                 type: "pdf",
-
                 content:
                     result.text ||
                     result.content ||
                     result.extracted_text ||
                     ""
-
             });
 
         } catch (error) {
-
             console.error(
                 "PDF read error:",
                 error
             );
 
             fileContext.push({
-
                 name: file.name,
-
                 type: "pdf",
-
                 content:
                     "[PDF could not be read by the backend.]"
-
             });
         }
     }
 
-
-    /* -----------------------------------------------------
+    /* =====================================================
        IMAGES
-       ----------------------------------------------------- */
+       ===================================================== */
 
     for (const file of visionFiles) {
-
         try {
-
             const base64 =
                 await fileToBase64(file);
 
@@ -1156,67 +1009,49 @@ async function prepareFilesForAI(files) {
                 );
 
             if (result.ok) {
-
                 const data =
                     await result.json();
 
                 fileContext.push({
-
                     name: file.name,
-
                     type: "image",
-
                     content:
                         data.answer ||
                         data.description ||
                         data.text ||
                         ""
-
                 });
 
             } else {
-
                 fileContext.push({
-
                     name: file.name,
-
                     type: "image",
-
                     content:
                         "[Image was attached, but the vision backend is not currently available.]"
-
                 });
             }
 
         } catch (error) {
-
             console.error(
                 "Vision error:",
                 error
             );
 
             fileContext.push({
-
                 name: file.name,
-
                 type: "image",
-
                 content:
                     "[Image attached. Vision processing failed.]"
-
             });
         }
     }
 
-
-    /* -----------------------------------------------------
+    /* =====================================================
        OTHER FILES
-       ----------------------------------------------------- */
+       ===================================================== */
 
     for (const file of otherFiles) {
-
         fileContext.push({
-
             name: file.name,
 
             type:
@@ -1226,61 +1061,51 @@ async function prepareFilesForAI(files) {
 
             content:
                 `Attached file: ${file.name}. File type: ${file.type || "unknown"}. Size: ${formatBytes(file.size)}.`
-
         });
     }
 
     return fileContext;
 }
 
-
 /* =========================================================
    BASE64
    ========================================================= */
 
 function fileToBase64(file) {
-
     return new Promise(
         (resolve, reject) => {
-
             const reader =
                 new FileReader();
 
             reader.onload = () => {
-
                 resolve(
                     reader.result
                 );
-
             };
 
             reader.onerror =
                 reject;
 
             reader.readAsDataURL(file);
-
         }
     );
 }
-
 
 /* =========================================================
    FILE SIZE
    ========================================================= */
 
 function formatBytes(bytes) {
-
     if (!bytes) {
         return "0 B";
     }
 
-    const units =
-        [
-            "B",
-            "KB",
-            "MB",
-            "GB"
-        ];
+    const units = [
+        "B",
+        "KB",
+        "MB",
+        "GB"
+    ];
 
     const index =
         Math.floor(
@@ -1294,9 +1119,11 @@ function formatBytes(bytes) {
             Math.pow(
                 1024,
                 index
-            ) * 100
+            ) *
+            100
         ) / 100
-    ) + " " +
+    ) +
+        " " +
         units[
             Math.min(
                 index,
@@ -1305,13 +1132,11 @@ function formatBytes(bytes) {
         ];
 }
 
-
 /* =========================================================
    CREATE FILE CONTEXT TEXT
    ========================================================= */
 
 function buildFileContext(fileData) {
-
     if (!fileData.length) {
         return "";
     }
@@ -1321,7 +1146,6 @@ function buildFileContext(fileData) {
 
     fileData.forEach(
         (file, index) => {
-
             context +=
                 `\nFILE ${index + 1}: ${file.name}\n`;
 
@@ -1332,7 +1156,8 @@ function buildFileContext(fileData) {
                 "CONTENT:\n";
 
             context +=
-                file.content || "[No readable content]";
+                file.content ||
+                "[No readable content]";
 
             context +=
                 "\n===== END FILE =====\n";
@@ -1342,7 +1167,6 @@ function buildFileContext(fileData) {
     return context;
 }
 
-
 /* =========================================================
    CHAT WITH BACKEND
    ========================================================= */
@@ -1351,7 +1175,6 @@ async function askCodeAI(
     userText,
     fileData
 ) {
-
     const history =
         currentChat.map(
             item => ({
@@ -1370,19 +1193,16 @@ async function askCodeAI(
             ? languageSelect.value
             : "general";
 
-
     const combinedMessage =
         userText +
         buildFileContext(
             fileData
         );
 
-
     const response =
         await fetch(
             BACKEND_URL + "/chat",
             {
-
                 method: "POST",
 
                 headers: {
@@ -1392,7 +1212,6 @@ async function askCodeAI(
 
                 body:
                     JSON.stringify({
-
                         message:
                             combinedMessage,
 
@@ -1401,15 +1220,11 @@ async function askCodeAI(
 
                         history:
                             history
-
                     })
-
             }
         );
 
-
     if (!response.ok) {
-
         const errorText =
             await response.text();
 
@@ -1418,10 +1233,8 @@ async function askCodeAI(
         );
     }
 
-
     const data =
         await response.json();
-
 
     return (
         data.response ||
@@ -1431,13 +1244,11 @@ async function askCodeAI(
     );
 }
 
-
 /* =========================================================
    SEND MESSAGE
    ========================================================= */
 
 async function sendMessage() {
-
     if (isSending) {
         return;
     }
@@ -1447,7 +1258,10 @@ async function sendMessage() {
             ? messageInput.value.trim()
             : "";
 
-    if (!text && !selectedFiles.length) {
+    if (
+        !text &&
+        !selectedFiles.length
+    ) {
         return;
     }
 
@@ -1457,12 +1271,10 @@ async function sendMessage() {
         sendBtn.disabled = true;
     }
 
-
     if (!currentChatId) {
         currentChatId =
             createChatId();
     }
-
 
     const filesForMessage =
         selectedFiles.map(
@@ -1473,14 +1285,11 @@ async function sendMessage() {
             })
         );
 
-
     const displayText =
         text ||
         "Please analyze the attached files.";
 
-
     currentChat.push({
-
         role: "user",
 
         text:
@@ -1491,9 +1300,7 @@ async function sendMessage() {
 
         timestamp:
             Date.now()
-
     });
-
 
     addMessage(
         "user",
@@ -1504,30 +1311,23 @@ async function sendMessage() {
         }
     );
 
-
     if (messageInput) {
         messageInput.value = "";
     }
 
-
     const filesToProcess =
         [...selectedFiles];
 
-
     clearAttachments();
-
 
     const thinking =
         addThinking();
 
-
     try {
-
         const fileData =
             await prepareFilesForAI(
                 filesToProcess
             );
-
 
         const answer =
             await askCodeAI(
@@ -1536,12 +1336,9 @@ async function sendMessage() {
                 fileData
             );
 
-
         removeThinking();
 
-
         currentChat.push({
-
             role: "assistant",
 
             text:
@@ -1549,29 +1346,20 @@ async function sendMessage() {
 
             timestamp:
                 Date.now()
-
         });
-
 
         addMessage(
             "assistant",
             answer
         );
 
-
         if (guestMode) {
-
             saveGuestChat();
-
         } else {
-
             await saveCloudChat();
-
         }
 
-
     } catch (error) {
-
         console.error(
             "CodeAI error:",
             error
@@ -1579,14 +1367,11 @@ async function sendMessage() {
 
         removeThinking();
 
-
         const errorMessage =
             "Sorry bro, I couldn't process that right now.\n\n" +
             error.message;
 
-
         currentChat.push({
-
             role: "assistant",
 
             text:
@@ -1594,24 +1379,19 @@ async function sendMessage() {
 
             timestamp:
                 Date.now()
-
         });
-
 
         addMessage(
             "assistant",
             errorMessage
         );
 
-
         if (guestMode) {
             saveGuestChat();
         } else {
             await saveCloudChat();
         }
-
     }
-
 
     isSending = false;
 
@@ -1624,50 +1404,31 @@ async function sendMessage() {
     }
 }
 
-
 /* =========================================================
    PDF CREATOR
    ========================================================= */
 
 async function createPDFFromText() {
-
     let sourceText = "";
-
-
-    /* -----------------------------------------------------
-       If text is selected in the browser
-       ----------------------------------------------------- */
 
     const selection =
         window.getSelection
             ? window.getSelection().toString()
             : "";
 
-
     if (selection.trim()) {
-
         sourceText =
             selection.trim();
-
     }
 
-
-    /* -----------------------------------------------------
-       Otherwise ask user
-       ----------------------------------------------------- */
-
     if (!sourceText) {
-
         sourceText =
             prompt(
                 "Paste or enter the text you want in the PDF:"
             ) || "";
-
     }
 
-
     if (!sourceText.trim()) {
-
         alert(
             "No text was selected or entered."
         );
@@ -1675,60 +1436,46 @@ async function createPDFFromText() {
         return;
     }
 
-
-    /* -----------------------------------------------------
-       Ask how much text
-       ----------------------------------------------------- */
-
     const amount =
         prompt(
             "How much text should CodeAI put in the PDF?\n\n" +
             "Examples:\n" +
             "• All\n" +
             "• First 500 words\n" +
-            "• First 2 pages worth\n" +
-            "• 1000 characters\n\n" +
+            "• First 1000 words\n\n" +
             "Type a number for word count, or ALL:"
         );
-
 
     if (amount === null) {
         return;
     }
 
-
     let finalText =
         sourceText;
-
 
     const cleanAmount =
         amount
             .trim()
             .toLowerCase();
 
-
     if (
         cleanAmount !== "all" &&
         cleanAmount !== ""
     ) {
-
         const number =
             parseInt(
                 cleanAmount,
                 10
             );
 
-
         if (
             Number.isFinite(number) &&
             number > 0
         ) {
-
             const words =
                 sourceText
                     .trim()
                     .split(/\s+/);
-
 
             finalText =
                 words
@@ -1737,10 +1484,8 @@ async function createPDFFromText() {
                         number
                     )
                     .join(" ");
-
         }
     }
-
 
     const filename =
         prompt(
@@ -1748,20 +1493,21 @@ async function createPDFFromText() {
             "CodeAI_Document.pdf"
         );
 
-
     if (!filename) {
         return;
     }
 
+    const finalFilename =
+        filename.toLowerCase().endsWith(".pdf")
+            ? filename
+            : filename + ".pdf";
 
     try {
-
         const response =
             await fetch(
                 BACKEND_URL +
                 "/create-pdf",
                 {
-
                     method: "POST",
 
                     headers: {
@@ -1771,50 +1517,37 @@ async function createPDFFromText() {
 
                     body:
                         JSON.stringify({
-
                             text:
                                 finalText,
 
                             filename:
-                                filename.endsWith(".pdf")
-                                    ? filename
-                                    : filename + ".pdf"
-
+                                finalFilename
                         })
-
-                    }
-                );
-
+                }
+            );
 
         if (!response.ok) {
-
             throw new Error(
                 `PDF server returned ${response.status}`
             );
         }
-
 
         const contentType =
             response.headers.get(
                 "content-type"
             ) || "";
 
-
         if (
             contentType.includes(
                 "application/pdf"
             )
         ) {
-
             const blob =
                 await response.blob();
 
-
             downloadBlob(
                 blob,
-                filename.endsWith(".pdf")
-                    ? filename
-                    : filename + ".pdf"
+                finalFilename
             );
 
             addMessage(
@@ -1825,13 +1558,10 @@ async function createPDFFromText() {
             return;
         }
 
-
         const data =
             await response.json();
 
-
         if (data.url) {
-
             window.open(
                 data.url,
                 "_blank"
@@ -1840,9 +1570,7 @@ async function createPDFFromText() {
             return;
         }
 
-
         if (data.pdf) {
-
             const binary =
                 atob(data.pdf);
 
@@ -1856,15 +1584,11 @@ async function createPDFFromText() {
                 i < binary.length;
                 i++
             ) {
-
                 bytes[i] =
                     binary.charCodeAt(i);
-
             }
 
-
             downloadBlob(
-
                 new Blob(
                     [bytes],
                     {
@@ -1872,23 +1596,17 @@ async function createPDFFromText() {
                             "application/pdf"
                     }
                 ),
-
-                filename.endsWith(".pdf")
-                    ? filename
-                    : filename + ".pdf"
+                finalFilename
             );
 
             return;
         }
 
-
         throw new Error(
             "The backend did not return a PDF."
         );
 
-
     } catch (error) {
-
         console.error(
             "PDF creation error:",
             error
@@ -1901,7 +1619,6 @@ async function createPDFFromText() {
     }
 }
 
-
 /* =========================================================
    DOWNLOAD BLOB
    ========================================================= */
@@ -1910,16 +1627,14 @@ function downloadBlob(
     blob,
     filename
 ) {
-
     const url =
-        URL.createObjectURL(
-            blob
-        );
+        URL.createObjectURL(blob);
 
     const link =
         document.createElement("a");
 
-    link.href = url;
+    link.href =
+        url;
 
     link.download =
         filename;
@@ -1933,21 +1648,19 @@ function downloadBlob(
     link.remove();
 
     setTimeout(
-        () =>
-            URL.revokeObjectURL(url),
+        () => {
+            URL.revokeObjectURL(url);
+        },
         1000
     );
 }
-
 
 /* =========================================================
    CAMERA
    ========================================================= */
 
 function openCamera() {
-
     if (cameraInput) {
-
         cameraInput.setAttribute(
             "accept",
             "image/*"
@@ -1968,20 +1681,16 @@ function openCamera() {
     }
 }
 
-
 /* =========================================================
    MICROPHONE
    ========================================================= */
 
 function startMicrophone() {
-
     const SpeechRecognition =
         window.SpeechRecognition ||
         window.webkitSpeechRecognition;
 
-
     if (!SpeechRecognition) {
-
         alert(
             "Your browser does not support microphone speech recognition."
         );
@@ -1989,22 +1698,20 @@ function startMicrophone() {
         return;
     }
 
-
     if (recognition) {
-
         try {
             recognition.stop();
-        } catch {}
+        } catch (error) {
+            console.warn(error);
+        }
 
         recognition = null;
 
         return;
     }
 
-
     recognition =
         new SpeechRecognition();
-
 
     recognition.lang =
         "en-IN";
@@ -2015,60 +1722,45 @@ function startMicrophone() {
     recognition.interimResults =
         true;
 
-
     recognition.onstart =
         () => {
-
             if (micBtn) {
                 micBtn.classList.add(
                     "active"
                 );
             }
-
         };
-
 
     recognition.onresult =
         event => {
-
-            let finalText =
-                "";
+            let finalText = "";
 
             for (
                 let i = event.resultIndex;
                 i < event.results.length;
                 i++
             ) {
-
                 finalText +=
                     event.results[i][0]
                         .transcript;
-
             }
-
 
             if (messageInput) {
                 messageInput.value =
                     finalText;
             }
-
         };
-
 
     recognition.onerror =
         error => {
-
             console.error(
                 "Speech error:",
                 error
             );
-
         };
-
 
     recognition.onend =
         () => {
-
             if (micBtn) {
                 micBtn.classList.remove(
                     "active"
@@ -2077,20 +1769,16 @@ function startMicrophone() {
 
             recognition =
                 null;
-
         };
-
 
     recognition.start();
 }
-
 
 /* =========================================================
    ABOUT
    ========================================================= */
 
 function showAbout() {
-
     alert(
         "CodeAI\n\n" +
         "Your futuristic AI assistant.\n\n" +
@@ -2098,24 +1786,17 @@ function showAbout() {
     );
 }
 
-
 /* =========================================================
    BACKEND HEALTH
    ========================================================= */
 
 async function checkBackend() {
-
     try {
-
         const response =
             await fetch(
                 BACKEND_URL +
-                "/health",
-                {
-                    method: "GET"
-                }
+                "/health"
             );
-
 
         if (!response.ok) {
             throw new Error(
@@ -2123,293 +1804,229 @@ async function checkBackend() {
             );
         }
 
-
         console.log(
             "CodeAI backend: ONLINE"
         );
 
-
     } catch (error) {
-
         console.warn(
             "CodeAI backend unavailable:",
             error
         );
-
     }
 }
-
 
 /* =========================================================
    QUICK ACTIONS
    ========================================================= */
 
 function setupQuickActions() {
-
     document
         .querySelectorAll(
             "[data-prompt]"
         )
         .forEach(button => {
-
             button.addEventListener(
                 "click",
                 () => {
-
                     const promptText =
                         button.dataset.prompt;
 
                     if (messageInput) {
-
                         messageInput.value =
                             promptText;
 
                         messageInput.focus();
-
                     }
-
                 }
             );
-
         });
 }
-
 
 /* =========================================================
    FILE INPUT EVENTS
    ========================================================= */
 
 if (attachBtn) {
-
     attachBtn.addEventListener(
         "click",
         () => {
-
             if (fileInput) {
                 fileInput.click();
             }
-
         }
     );
 }
 
-
 if (cameraBtn) {
-
     cameraBtn.addEventListener(
         "click",
         openCamera
     );
 }
 
-
 if (fileInput) {
-
     fileInput.addEventListener(
         "change",
         event => {
-
             addFiles(
                 Array.from(
                     event.target.files || []
                 )
             );
-
         }
     );
 }
 
-
 if (cameraInput) {
-
     cameraInput.addEventListener(
         "change",
         event => {
-
             addFiles(
                 Array.from(
                     event.target.files || []
                 )
             );
-
         }
     );
 }
 
-
 if (imageInput) {
-
     imageInput.addEventListener(
         "change",
         event => {
-
             addFiles(
                 Array.from(
                     event.target.files || []
                 )
             );
-
         }
     );
 }
 
-
 if (removeAttachmentBtn) {
-
     removeAttachmentBtn.addEventListener(
         "click",
         clearAttachments
     );
 }
 
-
 /* =========================================================
    SEND BUTTON
    ========================================================= */
 
 if (sendBtn) {
-
     sendBtn.addEventListener(
         "click",
         sendMessage
     );
 }
 
-
 if (messageInput) {
-
     messageInput.addEventListener(
         "keydown",
         event => {
-
             if (
                 event.key === "Enter" &&
                 !event.shiftKey
             ) {
-
                 event.preventDefault();
-
                 sendMessage();
-
             }
-
         }
     );
 }
-
 
 /* =========================================================
    MICROPHONE
    ========================================================= */
 
 if (micBtn) {
-
     micBtn.addEventListener(
         "click",
         startMicrophone
     );
 }
 
-
 /* =========================================================
    NEW CHAT
    ========================================================= */
 
 if (newChatBtn) {
-
     newChatBtn.addEventListener(
         "click",
         startNewChat
     );
 }
 
-
 /* =========================================================
    GOOGLE LOGIN
    ========================================================= */
 
 if (googleLoginBtn) {
-
     googleLoginBtn.addEventListener(
         "click",
         loginWithGoogle
     );
 }
 
-
 /* =========================================================
    GUEST LOGIN
    ========================================================= */
 
 if (guestBtn) {
-
     guestBtn.addEventListener(
         "click",
         enterGuestMode
     );
 }
 
-
 /* =========================================================
    SIGN OUT
    ========================================================= */
 
 if (signOutBtn) {
-
     signOutBtn.addEventListener(
         "click",
         signOut
     );
 }
 
-
 /* =========================================================
    ABOUT
    ========================================================= */
 
 if (aboutBtn) {
-
     aboutBtn.addEventListener(
         "click",
         showAbout
     );
 }
 
-
 /* =========================================================
    MOBILE MENU
    ========================================================= */
 
 if (menuBtn) {
-
     menuBtn.addEventListener(
         "click",
         () => {
-
             const sidebar =
                 document.querySelector(
                     ".sidebar"
                 );
 
             if (sidebar) {
-
                 sidebar.classList.toggle(
                     "open"
                 );
-
             }
-
         }
     );
 }
 
-
 /* =========================================================
-   PDF BUTTON SUPPORT
-   ---------------------------------------------------------
-   If your HTML has a button with:
-   id="createPdfBtn"
-   it automatically works.
+   PDF BUTTON
    ========================================================= */
 
 const createPdfBtn =
@@ -2417,36 +2034,28 @@ const createPdfBtn =
         "createPdfBtn"
     );
 
-
 if (createPdfBtn) {
-
     createPdfBtn.addEventListener(
         "click",
         createPDFFromText
     );
 }
 
-
 /* =========================================================
    DRAG & DROP
    ========================================================= */
 
 if (messages) {
-
     messages.addEventListener(
         "dragover",
         event => {
-
             event.preventDefault();
-
         }
     );
-
 
     messages.addEventListener(
         "drop",
         event => {
-
             event.preventDefault();
 
             addFiles(
@@ -2454,23 +2063,18 @@ if (messages) {
                     event.dataTransfer.files || []
                 )
             );
-
         }
     );
 }
-
 
 /* =========================================================
    FIREBASE AUTH STATE
    ========================================================= */
 
 if (auth) {
-
     auth.onAuthStateChanged(
         async user => {
-
             if (user) {
-
                 currentUser =
                     user;
 
@@ -2489,21 +2093,16 @@ if (auth) {
                     "Authenticated:",
                     user.email
                 );
-
             }
-
         }
     );
-
 }
-
 
 /* =========================================================
    INITIAL STATE
    ========================================================= */
 
 function bootCodeAI() {
-
     updateAttachmentPreview();
 
     setupQuickActions();
@@ -2511,11 +2110,11 @@ function bootCodeAI() {
     checkBackend();
 
     if (!auth) {
-
         console.warn(
             "Firebase authentication is not available."
         );
 
+        showGateway();
     }
 
     console.log(
@@ -2558,6 +2157,5 @@ function bootCodeAI() {
         "================================"
     );
 }
-
 
 bootCodeAI();
