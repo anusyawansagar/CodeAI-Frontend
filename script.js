@@ -14,7 +14,6 @@ const BACKEND_URL =
 
 let currentUser = null;
 let isGuest = false;
-
 let chatHistory = [];
 let currentChatId = null;
 let cloudChats = [];
@@ -43,6 +42,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function initCodeAI() {
 
+    /* Firebase */
+
     if (typeof firebase !== "undefined") {
 
         try {
@@ -51,6 +52,7 @@ function initCodeAI() {
 
                 firebaseAuth = firebase.auth();
                 firebaseDB = firebase.firestore();
+
                 googleProvider =
                     new firebase.auth.GoogleAuthProvider();
 
@@ -61,6 +63,7 @@ function initCodeAI() {
                 console.warn(
                     "Firebase SDK loaded but no Firebase app was initialized."
                 );
+
             }
 
         } catch (error) {
@@ -69,6 +72,7 @@ function initCodeAI() {
                 "Firebase setup error:",
                 error
             );
+
         }
 
     } else {
@@ -76,7 +80,10 @@ function initCodeAI() {
         console.warn(
             "Firebase SDK not found. Guest mode will still work."
         );
+
     }
+
+    /* Setup everything */
 
     setupGateway();
     setupChat();
@@ -144,48 +151,38 @@ function setupGateway() {
 
     if (guestButton) {
 
-        guestButton.addEventListener(
-            "click",
-            event => {
+        guestButton.addEventListener("click", event => {
 
-                event.preventDefault();
+            event.preventDefault();
 
-                console.log(
-                    "👤 Guest button clicked"
-                );
+            console.log("👤 Guest button clicked");
 
-                enterGuestMode();
-            }
-        );
+            enterGuestMode();
+
+        });
 
     } else {
 
-        console.error(
-            "❌ guestBtn not found"
-        );
+        console.error("❌ guestBtn not found");
+
     }
 
     if (googleButton) {
 
-        googleButton.addEventListener(
-            "click",
-            event => {
+        googleButton.addEventListener("click", event => {
 
-                event.preventDefault();
+            event.preventDefault();
 
-                console.log(
-                    "🔐 Google button clicked"
-                );
+            console.log("🔐 Google button clicked");
 
-                loginWithGoogle();
-            }
-        );
+            loginWithGoogle();
+
+        });
 
     } else {
 
-        console.error(
-            "❌ googleLoginBtn not found"
-        );
+        console.error("❌ googleLoginBtn not found");
+
     }
 }
 
@@ -197,7 +194,6 @@ function enterGuestMode() {
 
     currentUser = null;
     isGuest = true;
-
     currentChatId = "guest";
 
     localStorage.setItem(
@@ -206,7 +202,9 @@ function enterGuestMode() {
     );
 
     showApp();
+
     updateAccountUI();
+
     loadGuestChat();
 
     setTimeout(() => {
@@ -249,12 +247,14 @@ async function loginWithGoogle() {
 
             button.textContent =
                 "Opening Google...";
+
         }
 
         if (!googleProvider) {
 
             googleProvider =
                 new firebase.auth.GoogleAuthProvider();
+
         }
 
         googleProvider.setCustomParameters({
@@ -289,8 +289,7 @@ async function loginWithGoogle() {
 
         } else if (
             error &&
-            error.code ===
-                "auth/popup-closed-by-user"
+            error.code === "auth/popup-closed-by-user"
         ) {
 
             message +=
@@ -298,8 +297,7 @@ async function loginWithGoogle() {
 
         } else if (
             error &&
-            error.code ===
-                "auth/unauthorized-domain"
+            error.code === "auth/unauthorized-domain"
         ) {
 
             message +=
@@ -307,8 +305,7 @@ async function loginWithGoogle() {
 
         } else if (
             error &&
-            error.code ===
-                "auth/operation-not-allowed"
+            error.code === "auth/operation-not-allowed"
         ) {
 
             message +=
@@ -319,6 +316,7 @@ async function loginWithGoogle() {
             message +=
                 error?.message ||
                 "Unknown Firebase error.";
+
         }
 
         alert(message);
@@ -333,8 +331,11 @@ async function loginWithGoogle() {
 
                 button.innerHTML =
                     button.dataset.oldHTML;
+
             }
+
         }
+
     }
 }
 
@@ -373,9 +374,11 @@ function setupAuthState() {
                 );
 
                 showApp();
+
                 updateAccountUI();
 
                 await loadChatList();
+
                 await loadCloudChat();
 
             } else {
@@ -383,7 +386,9 @@ function setupAuthState() {
                 if (!isGuest) {
                     showGateway();
                 }
+
             }
+
         }
     );
 }
@@ -406,6 +411,7 @@ function updateAccountUI() {
                 currentUser.displayName ||
                 currentUser.email ||
                 "Google User";
+
         }
 
         if (type) {
@@ -418,6 +424,7 @@ function updateAccountUI() {
             avatar.src =
                 currentUser.photoURL ||
                 "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg";
+
         }
 
         return;
@@ -435,6 +442,7 @@ function updateAccountUI() {
 
         avatar.src =
             "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/user.svg";
+
     }
 }
 
@@ -463,6 +471,7 @@ function setupSignOut() {
                 ) {
 
                     await firebaseAuth.signOut();
+
                 }
 
             } catch (error) {
@@ -471,12 +480,13 @@ function setupSignOut() {
                     "Sign out error:",
                     error
                 );
+
             }
 
             currentUser = null;
             isGuest = false;
-
             currentChatId = null;
+
             chatHistory = [];
             cloudChats = [];
 
@@ -485,6 +495,7 @@ function setupSignOut() {
             );
 
             showGateway();
+
         }
     );
 }
@@ -512,6 +523,7 @@ function saveGuestChat() {
             "Guest save error:",
             error
         );
+
     }
 }
 
@@ -534,17 +546,15 @@ function loadGuestChat() {
                 JSON.parse(saved);
 
             if (Array.isArray(parsed)) {
-
                 chatHistory = parsed;
-
             } else {
-
                 chatHistory = [];
             }
 
         } else {
 
             chatHistory = [];
+
         }
 
     } catch (error) {
@@ -555,6 +565,7 @@ function loadGuestChat() {
         );
 
         chatHistory = [];
+
     }
 
     renderMessages();
@@ -602,10 +613,6 @@ function createChatTitle() {
     const lower =
         text.toLowerCase();
 
-    /* =====================================================
-       GREETINGS
-       ===================================================== */
-
     if (
         /^(hi|hello|hey|hii|helo|yo|sup|namaste)\b/.test(lower)
     ) {
@@ -617,10 +624,6 @@ function createChatTitle() {
     ) {
         return "Greetings";
     }
-
-    /* =====================================================
-       CHATBOT
-       ===================================================== */
 
     if (
         (
@@ -637,16 +640,14 @@ function createChatTitle() {
             return "Python AI Assistant";
         }
 
-        if (/website|web|html|css|javascript/.test(lower)) {
+        if (
+            /website|web|html|css|javascript/.test(lower)
+        ) {
             return "AI Chatbot Website";
         }
 
         return "Creating a Chatbot";
     }
-
-    /* =====================================================
-       SCHOOL WEBSITE
-       ===================================================== */
 
     if (
         /school/.test(lower) &&
@@ -655,21 +656,12 @@ function createChatTitle() {
         return "School Website";
     }
 
-    /* =====================================================
-       WEBSITE
-       ===================================================== */
-
     if (
         /(create|make|build|develop|design).*(website|web site|web app|webpage|web page)/i
             .test(text)
     ) {
-
         return "Creating a Website";
     }
-
-    /* =====================================================
-       PYTHON
-       ===================================================== */
 
     if (/python/.test(lower)) {
 
@@ -700,10 +692,6 @@ function createChatTitle() {
         return "Python Help";
     }
 
-    /* =====================================================
-       JAVASCRIPT
-       ===================================================== */
-
     if (
         /javascript|script\.js|\bjs\b/.test(lower)
     ) {
@@ -717,13 +705,7 @@ function createChatTitle() {
         return "JavaScript Help";
     }
 
-    /* =====================================================
-       HTML / CSS
-       ===================================================== */
-
-    if (
-        /html|css/.test(lower)
-    ) {
+    if (/html|css/.test(lower)) {
 
         if (
             /error|bug|fix|broken|not working|problem/.test(lower)
@@ -734,13 +716,7 @@ function createChatTitle() {
         return "HTML & CSS Help";
     }
 
-    /* =====================================================
-       FIREBASE
-       ===================================================== */
-
-    if (
-        /firebase|firestore/.test(lower)
-    ) {
+    if (/firebase|firestore/.test(lower)) {
 
         if (
             /login|sign.?in|auth|authentication|google/.test(lower)
@@ -757,10 +733,6 @@ function createChatTitle() {
         return "Firebase Help";
     }
 
-    /* =====================================================
-       VERCEL
-       ===================================================== */
-
     if (/vercel/.test(lower)) {
 
         if (
@@ -771,10 +743,6 @@ function createChatTitle() {
 
         return "Vercel Deployment";
     }
-
-    /* =====================================================
-       RENDER
-       ===================================================== */
 
     if (/render/.test(lower)) {
 
@@ -787,29 +755,17 @@ function createChatTitle() {
         return "Render Deployment";
     }
 
-    /* =====================================================
-       GITHUB
-       ===================================================== */
-
     if (
         /github|git push|git commit|repository|repo/.test(lower)
     ) {
         return "GitHub Help";
     }
 
-    /* =====================================================
-       DEPLOYMENT / HOSTING
-       ===================================================== */
-
     if (
         /hosting|domain|deploy|deployment|website online|publish online/.test(lower)
     ) {
         return "Web Deployment";
     }
-
-    /* =====================================================
-       GENERAL CODING
-       ===================================================== */
 
     if (
         /code|coding|program|programming|debug|bug|syntax|java|c\+\+|react|node|api/.test(lower)
@@ -824,19 +780,11 @@ function createChatTitle() {
         return "Coding Help";
     }
 
-    /* =====================================================
-       MATH
-       ===================================================== */
-
     if (
         /math|calculate|calculator|equation|algebra|geometry|fraction|percentage|percent|prime|factor|multiplication|division|addition|subtraction|solve.*number/.test(lower)
     ) {
         return "Math Help";
     }
-
-    /* =====================================================
-       SCIENCE
-       ===================================================== */
 
     if (
         /science|physics|chemistry|biology|photosynthesis|gravity|atom|molecule|electricity|force|energy|planet|solar system/.test(lower)
@@ -844,37 +792,21 @@ function createChatTitle() {
         return "Science Help";
     }
 
-    /* =====================================================
-       IMAGE
-       ===================================================== */
-
     if (
         /image|picture|photo|attached image|analyze this image|camera|what do you see/.test(lower)
     ) {
         return "Image Analysis";
     }
 
-    /* =====================================================
-       PDF
-       ===================================================== */
-
     if (/pdf/.test(lower)) {
         return "PDF Help";
     }
-
-    /* =====================================================
-       DOCUMENTS / FILES
-       ===================================================== */
 
     if (
         /document|file|notes|read this|summarize this document|explain this document/.test(lower)
     ) {
         return "Document Help";
     }
-
-    /* =====================================================
-       YOUTUBE
-       ===================================================== */
 
     if (
         /youtube|shorts|subscriber|subscribers|channel|thumbnail|views|youtube studio/.test(lower)
@@ -897,19 +829,11 @@ function createChatTitle() {
         return "YouTube Help";
     }
 
-    /* =====================================================
-       PC / WINDOWS
-       ===================================================== */
-
     if (
         /computer|pc|windows|laptop|gpu|cpu|graphics|software|driver|nvidia|keyboard|mouse|monitor|ram|storage/.test(lower)
     ) {
         return "PC Help";
     }
-
-    /* =====================================================
-       SCHOOL
-       ===================================================== */
 
     if (
         /school|homework|exam|study|class|chapter|lesson|teacher|question paper|assignment/.test(lower)
@@ -917,19 +841,11 @@ function createChatTitle() {
         return "School Help";
     }
 
-    /* =====================================================
-       MUSIC
-       ===================================================== */
-
     if (
         /song|music|mashup|remix|beat|audio/.test(lower)
     ) {
         return "Music Help";
     }
-
-    /* =====================================================
-       ROBLOX / GAMING
-       ===================================================== */
 
     if (
         /roblox|gaming|vehicle legends|grow a garden|dead rails/.test(lower)
@@ -937,19 +853,11 @@ function createChatTitle() {
         return "Gaming Help";
     }
 
-    /* =====================================================
-       AI
-       ===================================================== */
-
     if (
         /artificial intelligence|ai|gemini|gpt|openai|model|llm|machine learning/.test(lower)
     ) {
         return "AI Chat";
     }
-
-    /* =====================================================
-       MONEY / ONLINE EARNING
-       ===================================================== */
 
     if (
         /money|earn|earning|income|online earning|freelance|business/.test(lower)
@@ -957,14 +865,8 @@ function createChatTitle() {
         return "Online Earning";
     }
 
-    /* =====================================================
-       GENERAL SMART FALLBACK
-       ===================================================== */
-
-    let title = text;
-
-    title =
-        title
+    let title =
+        text
             .replace(
                 /^(please|can you|could you|will you|help me|bro|tell me|show me|explain to me|i want to|i need to)\s+/i,
                 ""
@@ -979,15 +881,11 @@ function createChatTitle() {
         title.charAt(0).toUpperCase() +
         title.slice(1);
 
-    /* Remove ending punctuation */
-
     title =
         title.replace(
             /[.!?]+$/,
             ""
         );
-
-    /* Keep sidebar titles short */
 
     if (title.length > 45) {
 
@@ -996,6 +894,7 @@ function createChatTitle() {
                 .substring(0, 45)
                 .trim() +
             "...";
+
     }
 
     return title;
@@ -1014,8 +913,7 @@ function cleanHistory() {
                     message.role === "user" ||
                     message.role === "assistant"
                 ) &&
-                typeof message.content ===
-                    "string"
+                typeof message.content === "string"
         )
         .slice(-40);
 }
@@ -1047,6 +945,7 @@ async function saveCloudChat() {
 
             currentChatId =
                 chats.doc().id;
+
         }
 
         const automaticTitle =
@@ -1055,8 +954,7 @@ async function saveCloudChat() {
         const existingChat =
             cloudChats.find(
                 chat =>
-                    chat.id ===
-                    currentChatId
+                    chat.id === currentChatId
             );
 
         const finalTitle =
@@ -1068,8 +966,7 @@ async function saveCloudChat() {
             .doc(currentChatId)
             .set(
                 {
-                    title:
-                        finalTitle,
+                    title: finalTitle,
 
                     customTitle:
                         existingChat?.customTitle ||
@@ -1101,6 +998,7 @@ async function saveCloudChat() {
             "❌ Firestore save error:",
             error
         );
+
     }
 }
 
@@ -1128,30 +1026,28 @@ async function loadChatList() {
                 .get();
 
         cloudChats =
-            snapshot.docs.map(
-                doc => {
+            snapshot.docs.map(doc => {
 
-                    const data =
-                        doc.data() || {};
+                const data =
+                    doc.data() || {};
 
-                    return {
+                return {
+                    id: doc.id,
 
-                        id: doc.id,
+                    title:
+                        data.title ||
+                        "New Chat",
 
-                        title:
-                            data.title ||
-                            "New Chat",
+                    customTitle:
+                        data.customTitle ||
+                        false,
 
-                        customTitle:
-                            data.customTitle ||
-                            false,
+                    updatedAt:
+                        data.updatedAt ||
+                        null
+                };
 
-                        updatedAt:
-                            data.updatedAt ||
-                            null
-                    };
-                }
-            );
+            });
 
         cloudChats.sort(
             (a, b) =>
@@ -1172,6 +1068,7 @@ async function loadChatList() {
             "❌ Chat list error:",
             error
         );
+
     }
 }
 
@@ -1217,6 +1114,10 @@ async function openCloudChat(chatId) {
         renderMessages();
         renderChatList();
 
+        if (typeof window.closeCodeAISidebar === "function") {
+            window.closeCodeAISidebar();
+        }
+
         console.log(
             "📂 Opened chat:",
             data.title
@@ -1228,6 +1129,7 @@ async function openCloudChat(chatId) {
             "❌ Could not open chat:",
             error
         );
+
     }
 }
 
@@ -1307,6 +1209,7 @@ async function renameCloudChat(chatId) {
                     firebase.firestore
                         .FieldValue
                         .serverTimestamp()
+
             });
 
         console.log(
@@ -1326,6 +1229,7 @@ async function renameCloudChat(chatId) {
         alert(
             "Could not rename this chat."
         );
+
     }
 }
 
@@ -1382,6 +1286,7 @@ async function deleteCloudChat(chatId) {
             chatHistory = [];
 
             renderMessages();
+
         }
 
         await loadChatList();
@@ -1396,6 +1301,7 @@ async function deleteCloudChat(chatId) {
         alert(
             "Could not delete this chat."
         );
+
     }
 }
 
@@ -1456,8 +1362,6 @@ function renderChatList() {
         row.style.marginBottom =
             "4px";
 
-        /* CHAT BUTTON */
-
         const button =
             document.createElement("button");
 
@@ -1512,26 +1416,19 @@ function renderChatList() {
         button.title =
             chat.title;
 
-        if (
-            chat.id ===
-            currentChatId
-        ) {
+        if (chat.id === currentChatId) {
 
             button.style.background =
                 "rgba(255,255,255,0.08)";
+
         }
 
         button.addEventListener(
             "click",
             () => {
-
-                openCloudChat(
-                    chat.id
-                );
+                openCloudChat(chat.id);
             }
         );
-
-        /* THREE DOT MENU */
 
         const menuButton =
             document.createElement("button");
@@ -1547,6 +1444,11 @@ function renderChatList() {
 
         menuButton.title =
             "Chat options";
+
+        menuButton.setAttribute(
+            "aria-label",
+            "Chat options"
+        );
 
         menuButton.style.width =
             "36px";
@@ -1585,6 +1487,7 @@ function renderChatList() {
                     chat,
                     menuButton
                 );
+
             }
         );
 
@@ -1592,6 +1495,7 @@ function renderChatList() {
         row.appendChild(menuButton);
 
         list.appendChild(row);
+
     });
 }
 
@@ -1599,10 +1503,7 @@ function renderChatList() {
    CHAT MENU
    ========================================================= */
 
-function showChatMenu(
-    chat,
-    anchor
-) {
+function showChatMenu(chat, anchor) {
 
     closeChatMenus();
 
@@ -1645,9 +1546,7 @@ function showChatMenu(
     let top =
         rect.bottom + 5;
 
-    if (
-        left < 8
-    ) {
+    if (left < 8) {
         left = 8;
     }
 
@@ -1658,6 +1557,7 @@ function showChatMenu(
 
         top =
             rect.top - 105;
+
     }
 
     menu.style.left =
@@ -1665,8 +1565,6 @@ function showChatMenu(
 
     menu.style.top =
         `${top}px`;
-
-    /* RENAME */
 
     const rename =
         document.createElement("button");
@@ -1685,10 +1583,9 @@ function showChatMenu(
             renameCloudChat(
                 chat.id
             );
+
         }
     );
-
-    /* DELETE */
 
     const remove =
         document.createElement("button");
@@ -1710,6 +1607,7 @@ function showChatMenu(
             deleteCloudChat(
                 chat.id
             );
+
         }
     );
 
@@ -1822,6 +1720,7 @@ async function loadCloudChat() {
 
                 newestDoc = doc;
                 return;
+
             }
 
             const current =
@@ -1831,20 +1730,15 @@ async function loadCloudChat() {
                 newestDoc.data() || {};
 
             const currentTime =
-                current.updatedAt?.seconds ||
-                0;
+                current.updatedAt?.seconds || 0;
 
             const newestTime =
-                newest.updatedAt?.seconds ||
-                0;
+                newest.updatedAt?.seconds || 0;
 
-            if (
-                currentTime >
-                newestTime
-            ) {
-
+            if (currentTime > newestTime) {
                 newestDoc = doc;
             }
+
         });
 
         if (newestDoc) {
@@ -1856,11 +1750,10 @@ async function loadCloudChat() {
                 newestDoc.id;
 
             chatHistory =
-                Array.isArray(
-                    data.messages
-                )
+                Array.isArray(data.messages)
                     ? data.messages
                     : [];
+
         }
 
         renderMessages();
@@ -1880,6 +1773,7 @@ async function loadCloudChat() {
         chatHistory = [];
 
         renderMessages();
+
     }
 }
 
@@ -1904,6 +1798,7 @@ function setupChat() {
             "click",
             sendMessage
         );
+
     }
 
     if (input) {
@@ -1920,7 +1815,9 @@ function setupChat() {
                     event.preventDefault();
 
                     sendMessage();
+
                 }
+
             }
         );
 
@@ -1928,6 +1825,7 @@ function setupChat() {
             "input",
             autoResize
         );
+
     }
 
     if (newChat) {
@@ -1936,6 +1834,7 @@ function setupChat() {
             "click",
             startNewChat
         );
+
     }
 
     setupSignOut();
@@ -1972,6 +1871,8 @@ function startNewChat() {
 
     renderChatList();
 
+    closeSidebar();
+
     const input =
         get("messageInput");
 
@@ -1982,6 +1883,7 @@ function startNewChat() {
         autoResize();
 
         input.focus();
+
     }
 
     console.log(
@@ -2035,6 +1937,7 @@ async function sendMessage() {
                     : ""
             ) +
             `[Attached: ${selectedFile.name}]`;
+
     }
 
     if (selectedImage) {
@@ -2046,6 +1949,7 @@ async function sendMessage() {
                     : ""
             ) +
             "[Attached image]";
+
     }
 
     chatHistory.push({
@@ -2071,9 +1975,7 @@ async function sendMessage() {
         (
             selectedFile &&
             selectedFile.type &&
-            selectedFile.type.startsWith(
-                "image/"
-            )
+            selectedFile.type.startsWith("image/")
         )
     ) {
 
@@ -2098,8 +2000,7 @@ async function sendMessage() {
     if (
         selectedFile &&
         (
-            selectedFile.type ===
-                "application/pdf" ||
+            selectedFile.type === "application/pdf" ||
             selectedFile.name
                 .toLowerCase()
                 .endsWith(".pdf")
@@ -2140,8 +2041,6 @@ async function sendMessage() {
         return;
     }
 
-    /* NORMAL CHAT */
-
     showTyping();
 
     try {
@@ -2167,7 +2066,6 @@ async function sendMessage() {
 
                     body:
                         JSON.stringify({
-
                             message:
                                 text,
 
@@ -2185,6 +2083,7 @@ async function sendMessage() {
             throw new Error(
                 `Server returned ${response.status}`
             );
+
         }
 
         const data =
@@ -2233,6 +2132,7 @@ async function sendMessage() {
         );
 
         await saveCurrentChat();
+
     }
 
     isSending = false;
@@ -2286,15 +2186,12 @@ function addMessage(
 
         bubble.textContent =
             content;
+
     }
 
-    wrapper.appendChild(
-        bubble
-    );
+    wrapper.appendChild(bubble);
 
-    container.appendChild(
-        wrapper
-    );
+    container.appendChild(wrapper);
 
     scrollToBottom();
 }
@@ -2339,8 +2236,7 @@ function renderMessages() {
             if (
                 !message ||
                 !message.role ||
-                typeof message.content !==
-                    "string"
+                typeof message.content !== "string"
             ) {
                 return;
             }
@@ -2349,6 +2245,7 @@ function renderMessages() {
                 message.role,
                 message.content
             );
+
         }
     );
 
@@ -2402,13 +2299,9 @@ function showTyping() {
     bubble.textContent =
         "CodeAI is thinking...";
 
-    wrapper.appendChild(
-        bubble
-    );
+    wrapper.appendChild(bubble);
 
-    container.appendChild(
-        wrapper
-    );
+    container.appendChild(wrapper);
 
     scrollToBottom();
 }
@@ -2491,32 +2384,26 @@ function setupAttachments() {
     const remove =
         get("removeAttachmentBtn");
 
-    if (
-        attach &&
-        fileInput
-    ) {
+    if (attach && fileInput) {
 
         attach.addEventListener(
             "click",
             () => {
-
                 fileInput.click();
             }
         );
+
     }
 
-    if (
-        camera &&
-        cameraInput
-    ) {
+    if (camera && cameraInput) {
 
         camera.addEventListener(
             "click",
             () => {
-
                 cameraInput.click();
             }
         );
+
     }
 
     if (fileInput) {
@@ -2538,11 +2425,11 @@ function setupAttachments() {
                 selectedImage =
                     null;
 
-                showAttachment(
-                    file
-                );
+                showAttachment(file);
+
             }
         );
+
     }
 
     if (imageInput) {
@@ -2564,11 +2451,11 @@ function setupAttachments() {
                 selectedFile =
                     null;
 
-                showAttachment(
-                    file
-                );
+                showAttachment(file);
+
             }
         );
+
     }
 
     if (cameraInput) {
@@ -2594,8 +2481,10 @@ function setupAttachments() {
                     file,
                     true
                 );
+
             }
         );
+
     }
 
     if (remove) {
@@ -2604,6 +2493,7 @@ function setupAttachments() {
             "click",
             clearAttachment
         );
+
     }
 }
 
@@ -2630,6 +2520,7 @@ function showAttachment(
         preview.classList.remove(
             "hidden"
         );
+
     }
 
     if (name) {
@@ -2638,6 +2529,7 @@ function showAttachment(
             camera
                 ? "Camera photo"
                 : file.name;
+
     }
 
     if (type) {
@@ -2645,6 +2537,7 @@ function showAttachment(
         type.textContent =
             file.type ||
             "Attachment";
+
     }
 }
 
@@ -2686,6 +2579,7 @@ function clearAttachment() {
         preview.classList.add(
             "hidden"
         );
+
     }
 
     const name =
@@ -2727,7 +2621,7 @@ async function processImage(
         form.append(
             "message",
             question ||
-                "Analyze this image carefully."
+            "Analyze this image carefully."
         );
 
         const response =
@@ -2843,6 +2737,7 @@ async function processPDF(
             throw new Error(
                 `PDF server returned ${response.status}`
             );
+
         }
 
         const data =
@@ -2869,12 +2764,14 @@ async function processPDF(
                 `${instruction}\n\n` +
                 `PDF: ${data.filename || file.name}\n\n` +
                 data.content;
+
         }
 
         if (!reply) {
 
             reply =
                 "PDF processed, but no readable text was found.";
+
         }
 
         chatHistory.push({
@@ -2950,6 +2847,7 @@ async function processFile(
             throw new Error(
                 `File server returned ${response.status}`
             );
+
         }
 
         const data =
@@ -2976,12 +2874,14 @@ async function processFile(
                 `${instruction}\n\n` +
                 `File: ${data.filename || file.name}\n\n` +
                 data.content;
+
         }
 
         if (!reply) {
 
             reply =
                 "File received successfully.";
+
         }
 
         chatHistory.push({
@@ -3035,6 +2935,7 @@ async function saveCurrentChat() {
     } else if (currentUser) {
 
         await saveCloudChat();
+
     }
 }
 
@@ -3082,6 +2983,7 @@ function setupMicrophone() {
             button.classList.add(
                 "active"
             );
+
         };
 
     recognition.onend =
@@ -3090,6 +2992,7 @@ function setupMicrophone() {
             button.classList.remove(
                 "active"
             );
+
         };
 
     recognition.onerror =
@@ -3103,6 +3006,7 @@ function setupMicrophone() {
             button.classList.remove(
                 "active"
             );
+
         };
 
     recognition.onresult =
@@ -3128,7 +3032,9 @@ function setupMicrophone() {
                 autoResize();
 
                 input.focus();
+
             }
+
         };
 
     button.addEventListener(
@@ -3144,7 +3050,9 @@ function setupMicrophone() {
                 console.log(
                     "Microphone already running."
                 );
+
             }
+
         }
     );
 }
@@ -3178,8 +3086,10 @@ function setupSuggestions() {
                     autoResize();
 
                     input.focus();
+
                 }
             );
+
         });
 }
 
@@ -3221,38 +3131,302 @@ function setupModeSelector() {
 
                 input.placeholder =
                     "Ask CodeAI anything...";
+
             }
+
         }
     );
 }
 
 /* =========================================================
-   SIDEBAR
+   SIDEBAR — SINGLE MOBILE SYSTEM
    ========================================================= */
 
 function setupSidebar() {
 
-    const menu =
+    const menuBtn =
         get("menuBtn");
 
     const sidebar =
         get("sidebar");
 
+    const closeBtn =
+        get("sidebarCloseBtn");
+
+    const overlay =
+        get("sidebarOverlay");
+
+    const newChatBtn =
+        get("newChatBtn");
+
     if (
-        !menu ||
+        !menuBtn ||
         !sidebar
     ) {
+
+        console.error(
+            "❌ Sidebar elements missing"
+        );
+
         return;
     }
 
-    menu.addEventListener(
+    function openSidebar() {
+
+        sidebar.classList.add(
+            "open"
+        );
+
+        if (overlay) {
+
+            overlay.classList.add(
+                "active"
+            );
+
+            overlay.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+        }
+
+        menuBtn.setAttribute(
+            "aria-expanded",
+            "true"
+        );
+
+        menuBtn.setAttribute(
+            "aria-label",
+            "Close menu"
+        );
+
+        menuBtn.setAttribute(
+            "title",
+            "Close menu"
+        );
+
+        document.body.classList.add(
+            "sidebar-open"
+        );
+
+        console.log(
+            "📂 Sidebar opened"
+        );
+    }
+
+    function closeSidebar() {
+
+        sidebar.classList.remove(
+            "open"
+        );
+
+        if (overlay) {
+
+            overlay.classList.remove(
+                "active"
+            );
+
+            overlay.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+        }
+
+        menuBtn.setAttribute(
+            "aria-expanded",
+            "false"
+        );
+
+        menuBtn.setAttribute(
+            "aria-label",
+            "Open menu"
+        );
+
+        menuBtn.setAttribute(
+            "title",
+            "Open menu"
+        );
+
+        document.body.classList.remove(
+            "sidebar-open"
+        );
+
+        closeChatMenus();
+
+        console.log(
+            "📁 Sidebar closed"
+        );
+    }
+
+    function toggleSidebar() {
+
+        if (
+            sidebar.classList.contains(
+                "open"
+            )
+        ) {
+
+            closeSidebar();
+
+        } else {
+
+            openSidebar();
+
+        }
+    }
+
+    /* HAMBURGER */
+
+    menuBtn.addEventListener(
         "click",
+        event => {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            toggleSidebar();
+
+        }
+    );
+
+    /* CLOSE X */
+
+    if (closeBtn) {
+
+        closeBtn.addEventListener(
+            "click",
+            event => {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                closeSidebar();
+
+            }
+        );
+
+    }
+
+    /* OVERLAY */
+
+    if (overlay) {
+
+        overlay.addEventListener(
+            "click",
+            event => {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                closeSidebar();
+
+            }
+        );
+
+    }
+
+    /* ESCAPE */
+
+    document.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key === "Escape" &&
+                sidebar.classList.contains("open")
+            ) {
+
+                closeSidebar();
+
+            }
+
+        }
+    );
+
+    /* SAVED CHAT */
+
+    sidebar.addEventListener(
+        "click",
+        event => {
+
+            const chatButton =
+                event.target.closest(
+                    ".saved-chat"
+                );
+
+            const chatMenu =
+                event.target.closest(
+                    ".chat-menu-button"
+                );
+
+            if (chatMenu) {
+                return;
+            }
+
+            if (
+                chatButton &&
+                window.innerWidth <= 768
+            ) {
+
+                closeSidebar();
+
+            }
+
+        }
+    );
+
+    /* NEW CHAT */
+
+    if (newChatBtn) {
+
+        newChatBtn.addEventListener(
+            "click",
+            () => {
+
+                if (
+                    window.innerWidth <= 768
+                ) {
+
+                    closeSidebar();
+
+                }
+
+            }
+        );
+
+    }
+
+    /* DESKTOP */
+
+    window.addEventListener(
+        "resize",
         () => {
 
-            sidebar.classList.toggle(
-                "open"
-            );
+            if (
+                window.innerWidth > 768
+            ) {
+
+                closeSidebar();
+
+            }
+
         }
+    );
+
+    /* EXPORT SIDEBAR FUNCTIONS */
+
+    window.openCodeAISidebar =
+        openSidebar;
+
+    window.closeCodeAISidebar =
+        closeSidebar;
+
+    window.toggleCodeAISidebar =
+        toggleSidebar;
+
+    console.log(
+        "✅ CodeAI sidebar system ready"
     );
 }
 
@@ -3280,6 +3454,7 @@ function setupAbout() {
                 "VARAD WANSAGAR sir created me.\n\n" +
                 "Free mode: No subscriptions, no ads and no payments."
             );
+
         }
     );
 }
@@ -3300,9 +3475,9 @@ function formatAIText(text) {
     let value =
         String(text);
 
-    /* SAVE CODE BLOCKS BEFORE ESCAPING */
-
     const codeBlocks = [];
+
+    /* Extract code blocks first */
 
     value =
         value.replace(
@@ -3326,13 +3501,16 @@ function formatAIText(text) {
                 });
 
                 return `___CODE_BLOCK_${index}___`;
+
             }
         );
+
+    /* Escape normal HTML */
 
     value =
         escapeHTML(value);
 
-    /* RESTORE CODE BLOCKS */
+    /* Restore code blocks */
 
     codeBlocks.forEach(
         (block, index) => {
@@ -3358,6 +3536,7 @@ function formatAIText(text) {
                             <button
                                 class="copy-code"
                                 onclick="copyCode(this)"
+                                type="button"
                             >
                                 Copy
                             </button>
@@ -3367,10 +3546,11 @@ function formatAIText(text) {
                     </div>
                     `
                 );
+
         }
     );
 
-    /* BOLD */
+    /* Bold */
 
     value =
         value.replace(
@@ -3378,7 +3558,7 @@ function formatAIText(text) {
             "<strong>$1</strong>"
         );
 
-    /* INLINE CODE */
+    /* Inline code */
 
     value =
         value.replace(
@@ -3386,7 +3566,7 @@ function formatAIText(text) {
             '<code class="inline-code">$1</code>'
         );
 
-    /* NEW LINES */
+    /* New lines */
 
     value =
         value.replace(
@@ -3476,6 +3656,7 @@ async function copyCode(button) {
             "Copy error:",
             error
         );
+
     }
 }
 
@@ -3512,155 +3693,3 @@ window.renameCloudChat =
 
 window.deleteCloudChat =
     deleteCloudChat;
-    /* =========================================================
-   CODEAI MOBILE SIDEBAR — REAL OPEN/CLOSE BUTTON
-   ========================================================= */
-
-(function setupCodeAISidebar() {
-
-    function setup() {
-
-        const sidebar = document.getElementById("sidebar");
-        const menuBtn = document.getElementById("menuBtn");
-        const closeBtn = document.getElementById("sidebarCloseBtn");
-        const overlay = document.getElementById("sidebarOverlay");
-
-        if (!sidebar || !menuBtn || !closeBtn || !overlay) {
-            console.warn("CodeAI sidebar elements not found.");
-            return;
-        }
-
-        function openSidebar() {
-
-            sidebar.classList.add("open");
-            overlay.classList.add("active");
-
-            menuBtn.setAttribute("aria-expanded", "true");
-            menuBtn.setAttribute("aria-label", "Close menu");
-
-            document.body.classList.add("sidebar-open");
-        }
-
-        function closeSidebar() {
-
-            sidebar.classList.remove("open");
-            overlay.classList.remove("active");
-
-            menuBtn.setAttribute("aria-expanded", "false");
-            menuBtn.setAttribute("aria-label", "Open menu");
-
-            document.body.classList.remove("sidebar-open");
-        }
-
-        function toggleSidebar() {
-
-            if (sidebar.classList.contains("open")) {
-                closeSidebar();
-            } else {
-                openSidebar();
-            }
-        }
-
-        /* HAMBURGER */
-
-        menuBtn.addEventListener("click", function(event) {
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            toggleSidebar();
-
-        });
-
-        /* REAL X BUTTON */
-
-        closeBtn.addEventListener("click", function(event) {
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            closeSidebar();
-
-        });
-
-        /* CLICK OUTSIDE SIDEBAR */
-
-        overlay.addEventListener("click", function(event) {
-
-            event.preventDefault();
-
-            closeSidebar();
-
-        });
-
-        /* ESC KEY */
-
-        document.addEventListener("keydown", function(event) {
-
-            if (event.key === "Escape") {
-                closeSidebar();
-            }
-
-        });
-
-        /* CLOSE WHEN CLICKING A CHAT ON MOBILE */
-
-        sidebar.addEventListener("click", function(event) {
-
-            const chatButton =
-                event.target.closest(".chat-button");
-
-            if (
-                chatButton &&
-                window.innerWidth <= 768
-            ) {
-                closeSidebar();
-            }
-
-        });
-
-        /* CLOSE WHEN NEW CHAT IS PRESSED */
-
-        const newChatBtn =
-            document.getElementById("newChatBtn");
-
-        if (newChatBtn) {
-
-            newChatBtn.addEventListener("click", function() {
-
-                if (window.innerWidth <= 768) {
-                    closeSidebar();
-                }
-
-            });
-
-        }
-
-        /* RESET WHEN GOING BACK TO DESKTOP */
-
-        window.addEventListener("resize", function() {
-
-            if (window.innerWidth > 768) {
-                closeSidebar();
-            }
-
-        });
-
-        console.log("✅ CodeAI sidebar controls ready");
-
-    }
-
-    if (document.readyState === "loading") {
-
-        document.addEventListener(
-            "DOMContentLoaded",
-            setup
-        );
-
-    } else {
-
-        setup();
-
-    }
-
-})();
