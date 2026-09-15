@@ -104,9 +104,6 @@ button {
         #030303;
 }
 
-
-/* Red background lines */
-
 .gateway::before {
     content: "";
 
@@ -269,6 +266,10 @@ button {
 
     gap: 12px;
 
+    position: relative;
+
+    overflow: hidden;
+
     color: #ffffff;
 
     background: #161616;
@@ -295,9 +296,19 @@ button {
 }
 
 
+/* Google logo */
+
 .google-icon {
-    width: 26px;
-    height: 26px;
+    width: 22px !important;
+    height: 22px !important;
+
+    min-width: 22px !important;
+    min-height: 22px !important;
+
+    max-width: 22px !important;
+    max-height: 22px !important;
+
+    flex: 0 0 22px;
 
     display: flex;
     align-items: center;
@@ -309,7 +320,30 @@ button {
 
     border-radius: 50%;
 
+    overflow: hidden;
+
+    font-size: 13px;
+    line-height: 1;
+
     font-weight: 800;
+
+    box-shadow: none;
+}
+
+.google-icon img,
+.google-icon svg {
+    width: 16px !important;
+    height: 16px !important;
+
+    min-width: 16px !important;
+    min-height: 16px !important;
+
+    max-width: 16px !important;
+    max-height: 16px !important;
+
+    display: block;
+
+    object-fit: contain;
 }
 
 
@@ -566,17 +600,29 @@ button {
 }
 
 
-.account-avatar {
-    width: 35px;
-    height: 35px;
+/* =========================================
+   GOOGLE PROFILE AVATAR
+========================================= */
 
-    flex-shrink: 0;
+.account-avatar {
+    width: 35px !important;
+    height: 35px !important;
+
+    min-width: 35px !important;
+    min-height: 35px !important;
+
+    max-width: 35px !important;
+    max-height: 35px !important;
+
+    flex: 0 0 35px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    border-radius: 50%;
+    border-radius: 50% !important;
+
+    overflow: hidden;
 
     background:
         linear-gradient(
@@ -585,8 +631,44 @@ button {
             #650000
         );
 
+    color: white;
+
     font-size: 13px;
     font-weight: 700;
+}
+
+.account-avatar img {
+    width: 35px !important;
+    height: 35px !important;
+
+    min-width: 35px !important;
+    min-height: 35px !important;
+
+    max-width: 35px !important;
+    max-height: 35px !important;
+
+    display: block;
+
+    border-radius: 50% !important;
+
+    object-fit: cover !important;
+}
+
+#accountAvatar {
+    width: 35px !important;
+    height: 35px !important;
+
+    min-width: 35px !important;
+    min-height: 35px !important;
+
+    max-width: 35px !important;
+    max-height: 35px !important;
+
+    border-radius: 50% !important;
+
+    object-fit: cover !important;
+
+    overflow: hidden;
 }
 
 
@@ -1253,7 +1335,6 @@ button {
     .message-content {
         max-width: 90%;
     }
-
 }
 
 
@@ -1288,6 +1369,26 @@ button {
         width: 35px;
     }
 
+    /* Keep Google login logo small on mobile too */
+    .google-icon {
+        width: 22px !important;
+        height: 22px !important;
+        min-width: 22px !important;
+        min-height: 22px !important;
+        max-width: 22px !important;
+        max-height: 22px !important;
+    }
+
+    /* Keep profile avatar small on mobile too */
+    .account-avatar,
+    #accountAvatar {
+        width: 35px !important;
+        height: 35px !important;
+        min-width: 35px !important;
+        min-height: 35px !important;
+        max-width: 35px !important;
+        max-height: 35px !important;
+    }
 }
 
 
