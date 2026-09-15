@@ -561,7 +561,7 @@ function loadGuestChat() {
 }
 
 /* =========================================================
-   SMART CHAT TITLE
+   SMART CHAT TITLE SYSTEM
    ========================================================= */
 
 function createChatTitle() {
@@ -607,59 +607,219 @@ function createChatTitle() {
        ===================================================== */
 
     if (
-        /^(hi|hello|hey|hii|helo|yo|sup|namaste|good morning|good afternoon|good evening)\b/
-            .test(lower)
+        /^(hi|hello|hey|hii|helo|yo|sup|namaste)\b/.test(lower)
     ) {
+        return "Greetings";
+    }
 
+    if (
+        /^(good morning|good afternoon|good evening)\b/.test(lower)
+    ) {
         return "Greetings";
     }
 
     /* =====================================================
-       CHATBOT CREATION
+       CHATBOT
        ===================================================== */
 
     if (
-        /(create|make|build|develop|design|code).*(chatbot|chat bot|ai chatbot|ai assistant)/i
-            .test(lower) ||
-        /(chatbot|chat bot).*(create|make|build|develop|design|code)/i
-            .test(lower)
+        (
+            /(create|make|build|develop|design|code).*(chatbot|chat bot|ai assistant)/i
+                .test(text)
+        ) ||
+        (
+            /(chatbot|chat bot|ai assistant).*(create|make|build|develop|design|code)/i
+                .test(text)
+        )
     ) {
+
+        if (/python/.test(lower)) {
+            return "Python AI Assistant";
+        }
+
+        if (/website|web|html|css|javascript/.test(lower)) {
+            return "AI Chatbot Website";
+        }
 
         return "Creating a Chatbot";
     }
 
     /* =====================================================
-       WEBSITE CREATION
+       SCHOOL WEBSITE
        ===================================================== */
 
     if (
-        /(create|make|build|develop|design).*(website|web site|web app|webpage)/i
-            .test(lower)
+        /school/.test(lower) &&
+        /(website|web|site|portal|app)/.test(lower)
+    ) {
+        return "School Website";
+    }
+
+    /* =====================================================
+       WEBSITE
+       ===================================================== */
+
+    if (
+        /(create|make|build|develop|design).*(website|web site|web app|webpage|web page)/i
+            .test(text)
     ) {
 
         return "Creating a Website";
     }
 
     /* =====================================================
-       PYTHON PROJECT
+       PYTHON
        ===================================================== */
 
-    if (
-        /python/.test(lower) &&
-        /(create|make|build|code|project|game|program)/.test(lower)
-    ) {
+    if (/python/.test(lower)) {
 
-        return "Python Project";
+        if (
+            /assistant|agent|automation/.test(lower)
+        ) {
+            return "Python AI Assistant";
+        }
+
+        if (
+            /game|gaming/.test(lower)
+        ) {
+            return "Python Game";
+        }
+
+        if (
+            /error|bug|fix|broken|not working|problem/.test(lower)
+        ) {
+            return "Fix Python Error";
+        }
+
+        if (
+            /project|program|create|make|build/.test(lower)
+        ) {
+            return "Python Project";
+        }
+
+        return "Python Help";
     }
 
     /* =====================================================
-       CODING
+       JAVASCRIPT
        ===================================================== */
 
     if (
-        /code|coding|program|programming|debug|bug|syntax|javascript|html|css|java|c\+\+|react|node|api/
-            .test(lower)
+        /javascript|script\.js|\bjs\b/.test(lower)
     ) {
+
+        if (
+            /error|bug|fix|broken|not working|problem/.test(lower)
+        ) {
+            return "Fix JavaScript Error";
+        }
+
+        return "JavaScript Help";
+    }
+
+    /* =====================================================
+       HTML / CSS
+       ===================================================== */
+
+    if (
+        /html|css/.test(lower)
+    ) {
+
+        if (
+            /error|bug|fix|broken|not working|problem/.test(lower)
+        ) {
+            return "Fix Web Code";
+        }
+
+        return "HTML & CSS Help";
+    }
+
+    /* =====================================================
+       FIREBASE
+       ===================================================== */
+
+    if (
+        /firebase|firestore/.test(lower)
+    ) {
+
+        if (
+            /login|sign.?in|auth|authentication|google/.test(lower)
+        ) {
+            return "Firebase Login";
+        }
+
+        if (
+            /database|rules|security/.test(lower)
+        ) {
+            return "Firebase Database";
+        }
+
+        return "Firebase Help";
+    }
+
+    /* =====================================================
+       VERCEL
+       ===================================================== */
+
+    if (/vercel/.test(lower)) {
+
+        if (
+            /error|failed|not working|problem/.test(lower)
+        ) {
+            return "Fix Vercel Deployment";
+        }
+
+        return "Vercel Deployment";
+    }
+
+    /* =====================================================
+       RENDER
+       ===================================================== */
+
+    if (/render/.test(lower)) {
+
+        if (
+            /error|failed|not working|problem/.test(lower)
+        ) {
+            return "Fix Render Deployment";
+        }
+
+        return "Render Deployment";
+    }
+
+    /* =====================================================
+       GITHUB
+       ===================================================== */
+
+    if (
+        /github|git push|git commit|repository|repo/.test(lower)
+    ) {
+        return "GitHub Help";
+    }
+
+    /* =====================================================
+       DEPLOYMENT / HOSTING
+       ===================================================== */
+
+    if (
+        /hosting|domain|deploy|deployment|website online|publish online/.test(lower)
+    ) {
+        return "Web Deployment";
+    }
+
+    /* =====================================================
+       GENERAL CODING
+       ===================================================== */
+
+    if (
+        /code|coding|program|programming|debug|bug|syntax|java|c\+\+|react|node|api/.test(lower)
+    ) {
+
+        if (
+            /error|bug|fix|broken|not working|problem/.test(lower)
+        ) {
+            return "Fix Coding Problem";
+        }
 
         return "Coding Help";
     }
@@ -669,10 +829,8 @@ function createChatTitle() {
        ===================================================== */
 
     if (
-        /math|calculate|calculator|equation|algebra|geometry|fraction|percentage|percent|prime|factor|multiplication|division|addition|subtraction|solve.*number/
-            .test(lower)
+        /math|calculate|calculator|equation|algebra|geometry|fraction|percentage|percent|prime|factor|multiplication|division|addition|subtraction|solve.*number/.test(lower)
     ) {
-
         return "Math Help";
     }
 
@@ -681,10 +839,8 @@ function createChatTitle() {
        ===================================================== */
 
     if (
-        /science|physics|chemistry|biology|photosynthesis|gravity|atom|molecule|electricity|force|energy|planet|solar system/
-            .test(lower)
+        /science|physics|chemistry|biology|photosynthesis|gravity|atom|molecule|electricity|force|energy|planet|solar system/.test(lower)
     ) {
-
         return "Science Help";
     }
 
@@ -693,22 +849,26 @@ function createChatTitle() {
        ===================================================== */
 
     if (
-        /image|picture|photo|attached image|analyze this image|camera|what do you see/
-            .test(lower)
+        /image|picture|photo|attached image|analyze this image|camera|what do you see/.test(lower)
     ) {
-
         return "Image Analysis";
     }
 
     /* =====================================================
-       PDF / DOCUMENTS
+       PDF
+       ===================================================== */
+
+    if (/pdf/.test(lower)) {
+        return "PDF Help";
+    }
+
+    /* =====================================================
+       DOCUMENTS / FILES
        ===================================================== */
 
     if (
-        /pdf|document|file|notes|read this|summarize this document|explain this document/
-            .test(lower)
+        /document|file|notes|read this|summarize this document|explain this document/.test(lower)
     ) {
-
         return "Document Help";
     }
 
@@ -717,46 +877,33 @@ function createChatTitle() {
        ===================================================== */
 
     if (
-        /youtube|shorts|subscriber|subscribers|channel|video|thumbnail|views|youtube studio/
-            .test(lower)
+        /youtube|shorts|subscriber|subscribers|channel|thumbnail|views|youtube studio/.test(lower)
     ) {
+
+        if (
+            /subscriber|subscribers|subs|growth/.test(lower)
+        ) {
+            return "YouTube Growth";
+        }
+
+        if (/thumbnail/.test(lower)) {
+            return "YouTube Thumbnail";
+        }
+
+        if (/shorts|video/.test(lower)) {
+            return "YouTube Shorts";
+        }
 
         return "YouTube Help";
     }
 
     /* =====================================================
-       FIREBASE
+       PC / WINDOWS
        ===================================================== */
 
     if (
-        /firebase|firestore|firebase auth|google sign.?in|google login/
-            .test(lower)
+        /computer|pc|windows|laptop|gpu|cpu|graphics|software|driver|nvidia|keyboard|mouse|monitor|ram|storage/.test(lower)
     ) {
-
-        return "Firebase Help";
-    }
-
-    /* =====================================================
-       DEPLOYMENT
-       ===================================================== */
-
-    if (
-        /render|vercel|github|hosting|domain|deploy|deployment|frontend|backend|website online/
-            .test(lower)
-    ) {
-
-        return "Web Project";
-    }
-
-    /* =====================================================
-       PC
-       ===================================================== */
-
-    if (
-        /computer|pc|windows|laptop|gpu|cpu|graphics|software|driver|nvidia|keyboard|mouse|monitor/
-            .test(lower)
-    ) {
-
         return "PC Help";
     }
 
@@ -765,23 +912,9 @@ function createChatTitle() {
        ===================================================== */
 
     if (
-        /school|homework|exam|study|class|chapter|lesson|teacher|question paper/
-            .test(lower)
+        /school|homework|exam|study|class|chapter|lesson|teacher|question paper|assignment/.test(lower)
     ) {
-
         return "School Help";
-    }
-
-    /* =====================================================
-       AI
-       ===================================================== */
-
-    if (
-        /ai|artificial intelligence|chatbot|gemini|gpt|openai|model|llm|machine learning/
-            .test(lower)
-    ) {
-
-        return "AI Chat";
     }
 
     /* =====================================================
@@ -789,10 +922,8 @@ function createChatTitle() {
        ===================================================== */
 
     if (
-        /song|music|mashup|remix|beat|audio/
-            .test(lower)
+        /song|music|mashup|remix|beat|audio/.test(lower)
     ) {
-
         return "Music Help";
     }
 
@@ -801,25 +932,44 @@ function createChatTitle() {
        ===================================================== */
 
     if (
-        /roblox|game|gaming|vehicle legends|grow a garden|dead rails/
-            .test(lower)
+        /roblox|gaming|vehicle legends|grow a garden|dead rails/.test(lower)
     ) {
-
         return "Gaming Help";
     }
 
     /* =====================================================
-       GENERAL CLEAN TITLE
+       AI
+       ===================================================== */
+
+    if (
+        /artificial intelligence|ai|gemini|gpt|openai|model|llm|machine learning/.test(lower)
+    ) {
+        return "AI Chat";
+    }
+
+    /* =====================================================
+       MONEY / ONLINE EARNING
+       ===================================================== */
+
+    if (
+        /money|earn|earning|income|online earning|freelance|business/.test(lower)
+    ) {
+        return "Online Earning";
+    }
+
+    /* =====================================================
+       GENERAL SMART FALLBACK
        ===================================================== */
 
     let title = text;
 
-    title = title
-        .replace(
-            /^(please|can you|could you|will you|help me|i want to|i need to)\s+/i,
-            ""
-        )
-        .trim();
+    title =
+        title
+            .replace(
+                /^(please|can you|could you|will you|help me|bro|tell me|show me|explain to me|i want to|i need to)\s+/i,
+                ""
+            )
+            .trim();
 
     if (!title) {
         return "New Chat";
@@ -829,11 +979,21 @@ function createChatTitle() {
         title.charAt(0).toUpperCase() +
         title.slice(1);
 
-    if (title.length > 42) {
+    /* Remove ending punctuation */
+
+    title =
+        title.replace(
+            /[.!?]+$/,
+            ""
+        );
+
+    /* Keep sidebar titles short */
+
+    if (title.length > 45) {
 
         title =
             title
-                .substring(0, 42)
+                .substring(0, 45)
                 .trim() +
             "...";
     }

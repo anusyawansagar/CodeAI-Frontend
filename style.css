@@ -1,7 +1,8 @@
-/* =========================================
+/* =========================================================
    CODEAI
    FUTURISTIC RED / BLACK UI
-========================================= */
+   RESPONSIVE PC + MOBILE
+========================================================= */
 
 :root {
     --bg: #050505;
@@ -14,19 +15,21 @@
     --red-soft: rgba(255, 30, 30, 0.14);
 
     --border: rgba(255, 40, 40, 0.20);
-    --border-bright: rgba(255, 40, 40, 0.45);
+    --border-bright: rgba(255, 40, 40, 0.48);
 
     --text: #f5f5f5;
     --text-soft: #b9b9b9;
     --text-muted: #777777;
 
     --radius: 16px;
+
+    --sidebar-width: 276px;
 }
 
 
-/* =========================================
+/* =========================================================
    RESET
-========================================= */
+========================================================= */
 
 * {
     box-sizing: border-box;
@@ -38,6 +41,7 @@ html,
 body {
     width: 100%;
     height: 100%;
+    max-width: 100%;
 }
 
 body {
@@ -57,6 +61,9 @@ body {
         sans-serif;
 
     overflow: hidden;
+
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
 button,
@@ -70,23 +77,22 @@ button {
     cursor: pointer;
 }
 
-
-/* =========================================
-   UTILITIES
-========================================= */
+img {
+    max-width: 100%;
+}
 
 .hidden {
     display: none !important;
 }
 
 
-/* =========================================
+/* =========================================================
    GATEWAY
-========================================= */
+========================================================= */
 
 .gateway {
     width: 100%;
-    height: 100vh;
+    height: 100dvh;
 
     display: flex;
     align-items: center;
@@ -128,8 +134,9 @@ button {
         black,
         transparent
     );
-}
 
+    pointer-events: none;
+}
 
 .gateway-glow {
     position: absolute;
@@ -159,9 +166,9 @@ button {
 }
 
 
-/* =========================================
+/* =========================================================
    GATEWAY CARD
-========================================= */
+========================================================= */
 
 .gateway-box {
     width: min(440px, calc(100% - 32px));
@@ -187,8 +194,9 @@ button {
     box-shadow:
         0 0 60px rgba(255, 0, 0, 0.10),
         inset 0 0 40px rgba(255, 0, 0, 0.025);
-}
 
+    backdrop-filter: blur(18px);
+}
 
 .gateway-logo,
 .welcome-logo,
@@ -212,7 +220,6 @@ button {
         0 0 25px rgba(255, 0, 0, 0.35);
 }
 
-
 .gateway-logo {
     width: 72px;
     height: 72px;
@@ -224,7 +231,6 @@ button {
     font-size: 30px;
 }
 
-
 .gateway-box h1 {
     font-size: 30px;
     letter-spacing: -1px;
@@ -232,11 +238,9 @@ button {
     margin-bottom: 12px;
 }
 
-
 .gateway-box h1 strong {
     color: var(--red);
 }
-
 
 .gateway-description {
     color: var(--text-soft);
@@ -251,13 +255,12 @@ button {
 }
 
 
-/* =========================================
+/* =========================================================
    GOOGLE LOGIN
-========================================= */
+========================================================= */
 
 .google-login-btn {
     width: 100%;
-
     height: 52px;
 
     display: flex;
@@ -281,7 +284,11 @@ button {
     font-size: 14px;
     font-weight: 600;
 
-    transition: 0.2s ease;
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .google-login-btn:hover {
@@ -294,9 +301,6 @@ button {
     box-shadow:
         0 0 25px rgba(255, 0, 0, 0.12);
 }
-
-
-/* Google logo */
 
 .google-icon {
     width: 22px !important;
@@ -326,8 +330,6 @@ button {
     line-height: 1;
 
     font-weight: 800;
-
-    box-shadow: none;
 }
 
 .google-icon img,
@@ -346,10 +348,8 @@ button {
     object-fit: contain;
 }
 
-
 .guest-btn {
     width: 100%;
-
     height: 48px;
 
     margin-top: 12px;
@@ -362,7 +362,10 @@ button {
 
     border-radius: 13px;
 
-    transition: 0.2s ease;
+    transition:
+        color 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease;
 }
 
 .guest-btn:hover {
@@ -372,7 +375,6 @@ button {
 
     background: var(--red-soft);
 }
-
 
 .gateway-divider {
     display: flex;
@@ -396,7 +398,6 @@ button {
     background: #222;
 }
 
-
 .gateway-note {
     color: var(--text-muted);
 
@@ -404,7 +405,6 @@ button {
 
     line-height: 1.6;
 }
-
 
 .auth-error {
     margin-top: 16px;
@@ -417,30 +417,33 @@ button {
 }
 
 
-/* =========================================
+/* =========================================================
    MAIN APP
-========================================= */
+========================================================= */
 
 .app {
     width: 100%;
-    height: 100vh;
+    height: 100dvh;
 
     display: flex;
+
+    position: relative;
+
+    overflow: hidden;
 
     background: #050505;
 }
 
 
-/* =========================================
+/* =========================================================
    SIDEBAR
-========================================= */
+========================================================= */
 
 .sidebar {
-    width: 270px;
+    width: var(--sidebar-width);
+    height: 100dvh;
 
-    height: 100vh;
-
-    flex-shrink: 0;
+    flex: 0 0 var(--sidebar-width);
 
     display: flex;
     flex-direction: column;
@@ -455,14 +458,22 @@ button {
     border-right: 1px solid var(--border);
 
     position: relative;
-    z-index: 20;
+    z-index: 100;
+
+    box-shadow:
+        10px 0 40px rgba(0, 0, 0, 0.18);
+
+    overflow: hidden;
 }
 
+
+/* =========================================================
+   SIDEBAR TOP
+========================================================= */
 
 .sidebar-top {
     padding: 18px;
 }
-
 
 .brand {
     display: flex;
@@ -473,22 +484,21 @@ button {
     margin-bottom: 20px;
 }
 
-
 .brand-logo {
     width: 42px;
     height: 42px;
+
+    flex: 0 0 42px;
 
     border-radius: 12px;
 
     font-size: 18px;
 }
 
-
 .brand-name {
     font-size: 16px;
     font-weight: 700;
 }
-
 
 .brand-subtitle {
     color: var(--text-muted);
@@ -498,10 +508,8 @@ button {
     margin-top: 2px;
 }
 
-
 .new-chat-btn {
     width: 100%;
-
     height: 45px;
 
     display: flex;
@@ -526,19 +534,24 @@ button {
 
     font-weight: 600;
 
-    transition: 0.2s ease;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
 }
 
 .new-chat-btn:hover {
     background: var(--red-soft);
 
     border-color: var(--border-bright);
+
+    transform: translateY(-1px);
 }
 
 
-/* =========================================
+/* =========================================================
    CHAT LIST
-========================================= */
+========================================================= */
 
 .chat-list-title {
     padding: 8px 20px;
@@ -552,15 +565,16 @@ button {
     letter-spacing: 1px;
 }
 
-
 .chat-list {
     flex: 1;
 
     overflow-y: auto;
+    overflow-x: hidden;
 
     padding: 4px 10px;
-}
 
+    overscroll-behavior: contain;
+}
 
 .chat-list::-webkit-scrollbar {
     width: 5px;
@@ -573,16 +587,22 @@ button {
 }
 
 
-/* =========================================
+/* =========================================================
    SIDEBAR ACCOUNT
-========================================= */
+========================================================= */
 
 .sidebar-bottom {
     padding: 12px;
 
     border-top: 1px solid #171717;
-}
 
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255, 0, 0, 0.015),
+            transparent
+        );
+}
 
 .account-card {
     display: flex;
@@ -597,12 +617,22 @@ button {
     background: #0d0d0d;
 
     border: 1px solid #191919;
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.account-card:hover {
+    border-color: #282828;
+
+    background: #101010;
 }
 
 
-/* =========================================
-   GOOGLE PROFILE AVATAR
-========================================= */
+/* =========================================================
+   ACCOUNT AVATAR
+========================================================= */
 
 .account-avatar {
     width: 35px !important;
@@ -671,13 +701,11 @@ button {
     overflow: hidden;
 }
 
-
 .account-details {
     min-width: 0;
 
     flex: 1;
 }
-
 
 .account-name {
     font-size: 12px;
@@ -690,7 +718,6 @@ button {
     text-overflow: ellipsis;
 }
 
-
 .account-type {
     color: #666;
 
@@ -698,7 +725,6 @@ button {
 
     margin-top: 2px;
 }
-
 
 .sign-out-btn {
     width: 32px;
@@ -710,7 +736,9 @@ button {
 
     border-radius: 8px;
 
-    transition: 0.2s ease;
+    transition:
+        color 0.2s ease,
+        background 0.2s ease;
 }
 
 .sign-out-btn:hover {
@@ -720,19 +748,22 @@ button {
 }
 
 
-/* =========================================
-   MAIN
-========================================= */
+/* =========================================================
+   MAIN CONTENT
+========================================================= */
 
 .main {
     min-width: 0;
+    min-height: 0;
 
     flex: 1;
 
-    height: 100vh;
+    height: 100dvh;
 
     display: flex;
     flex-direction: column;
+
+    position: relative;
 
     background:
         radial-gradient(
@@ -744,14 +775,14 @@ button {
 }
 
 
-/* =========================================
+/* =========================================================
    TOPBAR
-========================================= */
+========================================================= */
 
 .topbar {
     height: 62px;
 
-    flex-shrink: 0;
+    flex: 0 0 62px;
 
     display: flex;
     align-items: center;
@@ -760,11 +791,13 @@ button {
 
     border-bottom: 1px solid #151515;
 
-    background: rgba(5, 5, 5, 0.85);
+    background: rgba(5, 5, 5, 0.86);
 
-    backdrop-filter: blur(14px);
+    backdrop-filter: blur(16px);
+
+    position: relative;
+    z-index: 30;
 }
-
 
 .menu-btn {
     display: none;
@@ -779,21 +812,23 @@ button {
     background: transparent;
 
     border-radius: 9px;
-}
 
+    transition:
+        color 0.2s ease,
+        background 0.2s ease;
+}
 
 .menu-btn:hover {
     color: white;
+
     background: #151515;
 }
-
 
 .top-title {
     font-weight: 700;
 
     font-size: 15px;
 }
-
 
 .topbar-right {
     margin-left: auto;
@@ -803,7 +838,6 @@ button {
 
     gap: 18px;
 }
-
 
 .connection-status {
     display: flex;
@@ -816,10 +850,11 @@ button {
     font-size: 11px;
 }
 
-
 .status-dot {
     width: 7px;
     height: 7px;
+
+    flex: 0 0 7px;
 
     border-radius: 50%;
 
@@ -829,13 +864,14 @@ button {
         0 0 10px rgba(255, 0, 0, 0.7);
 }
 
-
 .about-btn {
     color: #888;
 
     background: transparent;
 
     font-size: 12px;
+
+    transition: color 0.2s ease;
 }
 
 .about-btn:hover {
@@ -843,20 +879,25 @@ button {
 }
 
 
-/* =========================================
+/* =========================================================
    CHAT AREA
-========================================= */
+========================================================= */
 
 .chat-area {
     flex: 1;
 
+    min-height: 0;
+    min-width: 0;
+
     overflow-y: auto;
+    overflow-x: hidden;
 
     position: relative;
 
     scroll-behavior: smooth;
-}
 
+    overscroll-behavior: contain;
+}
 
 .chat-area::-webkit-scrollbar {
     width: 7px;
@@ -868,10 +909,14 @@ button {
     border-radius: 10px;
 }
 
+.chat-area::-webkit-scrollbar-thumb:hover {
+    background: #333;
+}
 
-/* =========================================
+
+/* =========================================================
    WELCOME
-========================================= */
+========================================================= */
 
 .welcome {
     min-height: 100%;
@@ -884,7 +929,6 @@ button {
     padding: 40px 20px;
 }
 
-
 .welcome-logo {
     width: 62px;
     height: 62px;
@@ -896,7 +940,6 @@ button {
     margin-bottom: 22px;
 }
 
-
 .welcome h2 {
     font-size: clamp(24px, 4vw, 34px);
 
@@ -907,19 +950,20 @@ button {
     margin-bottom: 8px;
 }
 
-
 .welcome > p {
     color: #777;
 
     font-size: 13px;
 
+    text-align: center;
+
     margin-bottom: 32px;
 }
 
 
-/* =========================================
+/* =========================================================
    QUICK CARDS
-========================================= */
+========================================================= */
 
 .quick-actions {
     width: min(760px, 100%);
@@ -930,7 +974,6 @@ button {
 
     gap: 12px;
 }
-
 
 .quick-card {
     min-height: 105px;
@@ -957,9 +1000,12 @@ button {
 
     border-radius: 15px;
 
-    transition: 0.2s ease;
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
 }
-
 
 .quick-card:hover {
     border-color: var(--border-bright);
@@ -972,8 +1018,10 @@ button {
         );
 
     transform: translateY(-2px);
-}
 
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.25);
+}
 
 .quick-card span {
     color: #ff3333;
@@ -983,11 +1031,9 @@ button {
     margin-bottom: 9px;
 }
 
-
 .quick-card strong {
     font-size: 13px;
 }
-
 
 .quick-card small {
     color: #666;
@@ -998,9 +1044,9 @@ button {
 }
 
 
-/* =========================================
+/* =========================================================
    MESSAGES
-========================================= */
+========================================================= */
 
 .messages {
     width: min(900px, 100%);
@@ -1010,26 +1056,26 @@ button {
     padding: 30px 20px 120px;
 }
 
-
 .message {
     display: flex;
 
     margin-bottom: 22px;
-}
 
+    min-width: 0;
+}
 
 .message.user {
     justify-content: flex-end;
 }
 
-
 .message.ai {
     justify-content: flex-start;
 }
 
-
 .message-content {
     max-width: 80%;
+
+    min-width: 0;
 
     padding: 13px 16px;
 
@@ -1038,8 +1084,11 @@ button {
     line-height: 1.65;
 
     font-size: 14px;
-}
 
+    overflow-wrap: anywhere;
+
+    word-break: break-word;
+}
 
 .message.user .message-content {
     color: white;
@@ -1054,8 +1103,10 @@ button {
     border: 1px solid rgba(255, 70, 70, 0.4);
 
     border-bottom-right-radius: 5px;
-}
 
+    box-shadow:
+        0 5px 20px rgba(100, 0, 0, 0.16);
+}
 
 .message.ai .message-content {
     color: #ddd;
@@ -1068,9 +1119,38 @@ button {
 }
 
 
-/* =========================================
+/* =========================================================
+   CODE BLOCKS / LONG CONTENT
+========================================================= */
+
+pre {
+    max-width: 100%;
+
+    overflow-x: auto;
+
+    border-radius: 10px;
+
+    -webkit-overflow-scrolling: touch;
+}
+
+pre::-webkit-scrollbar {
+    height: 6px;
+}
+
+pre::-webkit-scrollbar-thumb {
+    background: #292929;
+
+    border-radius: 10px;
+}
+
+code {
+    overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
    INPUT
-========================================= */
+========================================================= */
 
 .input-wrapper {
     width: min(900px, calc(100% - 30px));
@@ -1080,8 +1160,9 @@ button {
     padding-bottom: 15px;
 
     position: relative;
-}
 
+    flex-shrink: 0;
+}
 
 .input-box {
     min-height: 58px;
@@ -1105,9 +1186,10 @@ button {
     box-shadow:
         0 0 30px rgba(0, 0, 0, 0.45);
 
-    transition: 0.2s ease;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
-
 
 .input-box:focus-within {
     border-color: var(--border-bright);
@@ -1116,12 +1198,11 @@ button {
         0 0 30px rgba(255, 0, 0, 0.08);
 }
 
-
 .input-tool {
     width: 40px;
     height: 40px;
 
-    flex-shrink: 0;
+    flex: 0 0 40px;
 
     color: #777;
 
@@ -1131,19 +1212,26 @@ button {
 
     font-size: 18px;
 
-    transition: 0.2s ease;
+    transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        transform 0.2s ease;
 }
-
 
 .input-tool:hover {
     color: #ff3b3b;
 
     background: var(--red-soft);
-}
 
+    transform: translateY(-1px);
+}
 
 #messageInput {
     flex: 1;
+
+    width: 100%;
+
+    min-width: 0;
 
     min-height: 40px;
     max-height: 180px;
@@ -1165,17 +1253,15 @@ button {
     line-height: 20px;
 }
 
-
 #messageInput::placeholder {
     color: #555;
 }
-
 
 .send-btn {
     width: 40px;
     height: 40px;
 
-    flex-shrink: 0;
+    flex: 0 0 40px;
 
     display: flex;
     align-items: center;
@@ -1198,9 +1284,10 @@ button {
     box-shadow:
         0 0 15px rgba(255, 0, 0, 0.20);
 
-    transition: 0.2s ease;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
-
 
 .send-btn:hover {
     transform: scale(1.05);
@@ -1208,7 +1295,6 @@ button {
     box-shadow:
         0 0 25px rgba(255, 0, 0, 0.35);
 }
-
 
 .input-footer {
     text-align: center;
@@ -1221,9 +1307,9 @@ button {
 }
 
 
-/* =========================================
+/* =========================================================
    ATTACHMENT
-========================================= */
+========================================================= */
 
 .attachment-preview {
     width: min(900px, calc(100% - 30px));
@@ -1242,20 +1328,21 @@ button {
     border: 1px solid var(--border);
 
     border-radius: 12px;
-}
 
+    min-width: 0;
+}
 
 .attachment-icon {
     font-size: 20px;
-}
 
+    flex: 0 0 auto;
+}
 
 .attachment-info {
     flex: 1;
 
     min-width: 0;
 }
-
 
 .attachment-name {
     color: #ddd;
@@ -1269,7 +1356,6 @@ button {
     text-overflow: ellipsis;
 }
 
-
 .attachment-type {
     color: #666;
 
@@ -1278,10 +1364,11 @@ button {
     margin-top: 3px;
 }
 
-
 .remove-attachment {
     width: 30px;
     height: 30px;
+
+    flex: 0 0 30px;
 
     color: #888;
 
@@ -1292,7 +1379,6 @@ button {
     font-size: 20px;
 }
 
-
 .remove-attachment:hover {
     color: #ff3333;
 
@@ -1300,83 +1386,531 @@ button {
 }
 
 
-/* =========================================
-   MOBILE
-========================================= */
+/* =========================================================
+   SIDEBAR MOBILE OVERLAY
+========================================================= */
 
-@media (max-width: 500px) {
+.sidebar-overlay,
+#sidebar-overlay,
+.overlay {
+    display: none;
+}
+
+
+/* =========================================================
+   MOBILE — TABLET / PHONE
+========================================================= */
+
+@media (max-width: 768px) {
+
+    body {
+        overflow: hidden;
+    }
+
+    .app {
+        width: 100%;
+        height: 100dvh;
+
+        overflow: hidden;
+    }
+
+
+    /* -----------------------------------------------------
+       MOBILE SIDEBAR
+    ----------------------------------------------------- */
+
+    .sidebar {
+        position: fixed;
+
+        top: 0;
+        left: 0;
+
+        width: min(84vw, 320px);
+        height: 100dvh;
+
+        z-index: 1000;
+
+        flex: none;
+
+        transform: translate3d(-105%, 0, 0);
+
+        transition:
+            transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+
+        box-shadow:
+            18px 0 55px rgba(0, 0, 0, 0.65);
+
+        will-change: transform;
+    }
+
+
+    /*
+       These cover the common class names used by
+       sidebar-opening JavaScript.
+    */
+
+    .sidebar.open,
+    .sidebar.active,
+    .sidebar.show,
+    .sidebar.visible,
+    #sidebar.open,
+    #sidebar.active,
+    #sidebar.show,
+    #sidebar.visible {
+        transform: translate3d(0, 0, 0);
+    }
+
+
+    /* -----------------------------------------------------
+       OVERLAY
+    ----------------------------------------------------- */
+
+    .sidebar-overlay,
+    #sidebar-overlay,
+    .overlay {
+        display: block;
+
+        position: fixed;
+
+        inset: 0;
+
+        z-index: 999;
+
+        background:
+            rgba(0, 0, 0, 0.58);
+
+        opacity: 0;
+
+        visibility: hidden;
+
+        pointer-events: none;
+
+        transition:
+            opacity 0.25s ease,
+            visibility 0.25s ease;
+
+        backdrop-filter: blur(2px);
+    }
+
+    .sidebar-overlay.active,
+    #sidebar-overlay.active,
+    .overlay.active,
+    .sidebar-overlay.show,
+    #sidebar-overlay.show,
+    .overlay.show {
+        opacity: 1;
+
+        visibility: visible;
+
+        pointer-events: auto;
+    }
+
+
+    /* -----------------------------------------------------
+       TOPBAR
+    ----------------------------------------------------- */
+
+    .topbar {
+        height: 58px;
+
+        flex-basis: 58px;
+
+        padding:
+            0 12px;
+
+        z-index: 50;
+    }
+
+    .menu-btn {
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        width: 40px;
+        height: 40px;
+
+        flex: 0 0 40px;
+    }
+
+    .top-title {
+        font-size: 14px;
+
+        white-space: nowrap;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
+    }
+
+    .topbar-right {
+        gap: 9px;
+    }
+
+    .connection-status {
+        display: none;
+    }
+
+    .about-btn {
+        font-size: 11px;
+    }
+
+
+    /* -----------------------------------------------------
+       CHAT AREA
+    ----------------------------------------------------- */
+
+    .chat-area {
+        width: 100%;
+
+        min-width: 0;
+
+        overflow-x: hidden;
+
+        -webkit-overflow-scrolling: touch;
+    }
+
+
+    /* -----------------------------------------------------
+       WELCOME
+    ----------------------------------------------------- */
+
+    .welcome {
+        min-height: 100%;
+
+        padding:
+            30px 14px 35px;
+    }
+
+    .welcome-logo {
+        width: 58px;
+        height: 58px;
+
+        margin-bottom: 18px;
+    }
+
+    .welcome h2 {
+        font-size: 25px;
+
+        max-width: 100%;
+    }
+
+    .welcome > p {
+        font-size: 12px;
+
+        margin-bottom: 24px;
+
+        max-width: 300px;
+    }
+
+
+    /* -----------------------------------------------------
+       QUICK ACTIONS
+    ----------------------------------------------------- */
+
+    .quick-actions {
+        width: 100%;
+
+        grid-template-columns: 1fr;
+
+        gap: 9px;
+    }
+
+    .quick-card {
+        min-height: 82px;
+
+        padding: 14px;
+
+        border-radius: 13px;
+    }
+
+    .quick-card span {
+        margin-bottom: 5px;
+
+        font-size: 16px;
+    }
+
+    .quick-card strong {
+        font-size: 12px;
+    }
+
+    .quick-card small {
+        font-size: 9px;
+    }
+
+
+    /* -----------------------------------------------------
+       MESSAGES
+    ----------------------------------------------------- */
+
+    .messages {
+        width: 100%;
+
+        padding:
+            20px 10px 120px;
+    }
+
+    .message {
+        margin-bottom: 17px;
+    }
+
+    .message-content {
+        max-width: 88%;
+
+        padding:
+            11px 13px;
+
+        font-size: 13px;
+
+        line-height: 1.6;
+
+        border-radius: 14px;
+    }
+
+
+    /* -----------------------------------------------------
+       INPUT
+    ----------------------------------------------------- */
+
+    .input-wrapper {
+        width: calc(100% - 14px);
+
+        padding-bottom:
+            max(10px, env(safe-area-inset-bottom));
+
+        margin-bottom: 2px;
+    }
+
+    .input-box {
+        min-height: 56px;
+
+        padding: 7px;
+
+        border-radius: 16px;
+    }
+
+    .input-tool {
+        width: 37px;
+        height: 38px;
+
+        flex-basis: 37px;
+
+        font-size: 17px;
+    }
+
+    #messageInput {
+        min-height: 38px;
+
+        padding:
+            9px 6px;
+
+        font-size: 16px;
+
+        line-height: 20px;
+    }
+
+    .send-btn {
+        width: 38px;
+        height: 38px;
+
+        flex-basis: 38px;
+
+        border-radius: 10px;
+
+        font-size: 18px;
+    }
+
+    .input-footer {
+        font-size: 8px;
+
+        margin-top: 6px;
+    }
+
+
+    /* -----------------------------------------------------
+       ATTACHMENTS
+    ----------------------------------------------------- */
+
+    .attachment-preview {
+        width: calc(100% - 14px);
+
+        padding:
+            9px 10px;
+
+        border-radius: 11px;
+    }
+
+
+    /* -----------------------------------------------------
+       SIDEBAR INTERNAL SPACING
+    ----------------------------------------------------- */
+
+    .sidebar-top {
+        padding: 16px;
+    }
+
+    .brand {
+        margin-bottom: 17px;
+    }
+
+    .chat-list {
+        padding:
+            4px 8px;
+    }
+
+    .sidebar-bottom {
+        padding:
+            10px;
+    }
+}
+
+
+/* =========================================================
+   SMALL PHONES
+========================================================= */
+
+@media (max-width: 480px) {
 
     .gateway-box {
-        padding: 32px 22px;
+        width: calc(100% - 24px);
+
+        padding:
+            30px 20px;
+
+        border-radius: 21px;
+    }
+
+    .gateway-logo {
+        width: 64px;
+        height: 64px;
+
+        margin-bottom: 20px;
     }
 
     .gateway-box h1 {
         font-size: 25px;
     }
 
-    .welcome {
-        padding-top: 25px;
+    .gateway-description {
+        font-size: 13px;
     }
 
-    .welcome h2 {
-        font-size: 24px;
+    .google-login-btn {
+        height: 50px;
+    }
+
+    .welcome {
+        padding:
+            24px 12px 30px;
     }
 
     .messages {
-        padding-left: 12px;
-        padding-right: 12px;
+        padding-left: 8px;
+        padding-right: 8px;
     }
 
-    /* =========================================
-       MOBILE INPUT - MOVE SLIGHTLY UP
-    ========================================= */
+    .message-content {
+        max-width: 91%;
+
+        font-size: 13px;
+    }
 
     .input-wrapper {
-        width: calc(100% - 16px);
-
-        padding-bottom: 25px;
-
-        transform: translateY(-8px);
+        width: calc(100% - 10px);
     }
 
-    .input-box {
-        min-height: 58px;
-    }
+    .sidebar {
+        width: 86vw;
 
-    .input-tool {
-        width: 35px;
-    }
-
-    /* Google login logo */
-    .google-icon {
-        width: 22px !important;
-        height: 22px !important;
-
-        min-width: 22px !important;
-        min-height: 22px !important;
-
-        max-width: 22px !important;
-        max-height: 22px !important;
-    }
-
-    /* Google profile avatar */
-    .account-avatar,
-    #accountAvatar {
-        width: 35px !important;
-        height: 35px !important;
-
-        min-width: 35px !important;
-        min-height: 35px !important;
-
-        max-width: 35px !important;
-        max-height: 35px !important;
+        max-width: 310px;
     }
 }
 
 
-/* =========================================
+/* =========================================================
+   VERY SMALL PHONES
+========================================================= */
+
+@media (max-width: 360px) {
+
+    .sidebar {
+        width: 90vw;
+    }
+
+    .topbar {
+        padding:
+            0 8px;
+    }
+
+    .menu-btn {
+        width: 38px;
+        height: 38px;
+
+        flex-basis: 38px;
+
+        margin-right: 7px;
+    }
+
+    .top-title {
+        font-size: 13px;
+    }
+
+    .about-btn {
+        font-size: 10px;
+    }
+
+    .message-content {
+        max-width: 94%;
+
+        padding:
+            10px 12px;
+        font-size: 12px;
+    }
+
+    .input-tool {
+        width: 34px;
+        flex-basis: 34px;
+    }
+
+    .send-btn {
+        width: 36px;
+        height: 36px;
+
+        flex-basis: 36px;
+    }
+}
+
+
+/* =========================================================
+   TOUCH DEVICES
+========================================================= */
+
+@media (hover: none) and (pointer: coarse) {
+
+    button {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .quick-card:hover,
+    .new-chat-btn:hover,
+    .send-btn:hover,
+    .input-tool:hover {
+        transform: none;
+    }
+
+    .quick-card:active {
+        transform: scale(0.99);
+    }
+
+    .send-btn:active {
+        transform: scale(0.95);
+    }
+}
+
+
+/* =========================================================
    SELECTION
-========================================= */
+========================================================= */
 
 ::selection {
     background: rgba(255, 0, 0, 0.35);
@@ -1385,12 +1919,13 @@ button {
 }
 
 
-/* =========================================
+/* =========================================================
    SCROLLBARS
-========================================= */
+========================================================= */
 
 ::-webkit-scrollbar {
     width: 7px;
+    height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -1405,4 +1940,25 @@ button {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #3a3a3a;
+}
+
+
+/* =========================================================
+   MOBILE SCROLLBAR
+========================================================= */
+
+@media (max-width: 768px) {
+
+    ::-webkit-scrollbar {
+        width: 3px;
+        height: 3px;
+    }
+
+    .chat-area::-webkit-scrollbar {
+        width: 3px;
+    }
+
+    .chat-list::-webkit-scrollbar {
+        width: 3px;
+    }
 }
