@@ -438,8 +438,8 @@
         const firebaseAuth = firebase.auth();
         const firestore = firebase.firestore();
 
-        window.firebaseAuth = firebaseAuth;
-        window.firestore = firestore;
+        window.firebaseAuth = firebaseAuth();
+        window.firestore = firestore();
 
     </script>
 
