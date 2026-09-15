@@ -3512,3 +3512,155 @@ window.renameCloudChat =
 
 window.deleteCloudChat =
     deleteCloudChat;
+    /* =========================================================
+   CODEAI MOBILE SIDEBAR — REAL OPEN/CLOSE BUTTON
+   ========================================================= */
+
+(function setupCodeAISidebar() {
+
+    function setup() {
+
+        const sidebar = document.getElementById("sidebar");
+        const menuBtn = document.getElementById("menuBtn");
+        const closeBtn = document.getElementById("sidebarCloseBtn");
+        const overlay = document.getElementById("sidebarOverlay");
+
+        if (!sidebar || !menuBtn || !closeBtn || !overlay) {
+            console.warn("CodeAI sidebar elements not found.");
+            return;
+        }
+
+        function openSidebar() {
+
+            sidebar.classList.add("open");
+            overlay.classList.add("active");
+
+            menuBtn.setAttribute("aria-expanded", "true");
+            menuBtn.setAttribute("aria-label", "Close menu");
+
+            document.body.classList.add("sidebar-open");
+        }
+
+        function closeSidebar() {
+
+            sidebar.classList.remove("open");
+            overlay.classList.remove("active");
+
+            menuBtn.setAttribute("aria-expanded", "false");
+            menuBtn.setAttribute("aria-label", "Open menu");
+
+            document.body.classList.remove("sidebar-open");
+        }
+
+        function toggleSidebar() {
+
+            if (sidebar.classList.contains("open")) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        }
+
+        /* HAMBURGER */
+
+        menuBtn.addEventListener("click", function(event) {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            toggleSidebar();
+
+        });
+
+        /* REAL X BUTTON */
+
+        closeBtn.addEventListener("click", function(event) {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            closeSidebar();
+
+        });
+
+        /* CLICK OUTSIDE SIDEBAR */
+
+        overlay.addEventListener("click", function(event) {
+
+            event.preventDefault();
+
+            closeSidebar();
+
+        });
+
+        /* ESC KEY */
+
+        document.addEventListener("keydown", function(event) {
+
+            if (event.key === "Escape") {
+                closeSidebar();
+            }
+
+        });
+
+        /* CLOSE WHEN CLICKING A CHAT ON MOBILE */
+
+        sidebar.addEventListener("click", function(event) {
+
+            const chatButton =
+                event.target.closest(".chat-button");
+
+            if (
+                chatButton &&
+                window.innerWidth <= 768
+            ) {
+                closeSidebar();
+            }
+
+        });
+
+        /* CLOSE WHEN NEW CHAT IS PRESSED */
+
+        const newChatBtn =
+            document.getElementById("newChatBtn");
+
+        if (newChatBtn) {
+
+            newChatBtn.addEventListener("click", function() {
+
+                if (window.innerWidth <= 768) {
+                    closeSidebar();
+                }
+
+            });
+
+        }
+
+        /* RESET WHEN GOING BACK TO DESKTOP */
+
+        window.addEventListener("resize", function() {
+
+            if (window.innerWidth > 768) {
+                closeSidebar();
+            }
+
+        });
+
+        console.log("✅ CodeAI sidebar controls ready");
+
+    }
+
+    if (document.readyState === "loading") {
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            setup
+        );
+
+    } else {
+
+        setup();
+
+    }
+
+})();
