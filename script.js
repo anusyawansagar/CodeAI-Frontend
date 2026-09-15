@@ -2,21 +2,21 @@
 
 /* =========================================================
    CODEAI FRONTEND
-   STABLE + FIREBASE CHAT SAVING + VISION + FILES
-========================================================= */
+   SMART CHAT SYSTEM + FIREBASE + VISION + FILES
+   ========================================================= */
 
-const BACKEND_URL = "https://codeai-backend-0y6t.onrender.com";
+const BACKEND_URL =
+    "https://codeai-backend-0y6t.onrender.com";
 
 /* =========================================================
    GLOBAL STATE
-========================================================= */
+   ========================================================= */
 
 let currentUser = null;
 let isGuest = false;
 
 let chatHistory = [];
 let currentChatId = null;
-
 let cloudChats = [];
 
 let selectedFile = null;
@@ -30,7 +30,7 @@ let googleProvider = null;
 
 /* =========================================================
    START
-========================================================= */
+   ========================================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
     console.log("🚀 CodeAI JavaScript started");
@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /* =========================================================
    MAIN INITIALIZATION
-========================================================= */
+   ========================================================= */
 
 function initCodeAI() {
 
@@ -51,7 +51,8 @@ function initCodeAI() {
 
                 firebaseAuth = firebase.auth();
                 firebaseDB = firebase.firestore();
-                googleProvider = new firebase.auth.GoogleAuthProvider();
+                googleProvider =
+                    new firebase.auth.GoogleAuthProvider();
 
                 console.log("🔥 Firebase ready");
 
@@ -64,7 +65,10 @@ function initCodeAI() {
 
         } catch (error) {
 
-            console.error("Firebase setup error:", error);
+            console.error(
+                "Firebase setup error:",
+                error
+            );
         }
 
     } else {
@@ -91,7 +95,7 @@ function initCodeAI() {
 
 /* =========================================================
    ELEMENT HELPER
-========================================================= */
+   ========================================================= */
 
 function get(id) {
     return document.getElementById(id);
@@ -99,7 +103,7 @@ function get(id) {
 
 /* =========================================================
    SHOW / HIDE
-========================================================= */
+   ========================================================= */
 
 function showGateway() {
 
@@ -131,7 +135,7 @@ function showApp() {
 
 /* =========================================================
    GATEWAY
-========================================================= */
+   ========================================================= */
 
 function setupGateway() {
 
@@ -140,40 +144,54 @@ function setupGateway() {
 
     if (guestButton) {
 
-        guestButton.addEventListener("click", (event) => {
+        guestButton.addEventListener(
+            "click",
+            event => {
 
-            event.preventDefault();
+                event.preventDefault();
 
-            console.log("👤 Guest button clicked");
+                console.log(
+                    "👤 Guest button clicked"
+                );
 
-            enterGuestMode();
-        });
+                enterGuestMode();
+            }
+        );
 
     } else {
 
-        console.error("❌ guestBtn not found");
+        console.error(
+            "❌ guestBtn not found"
+        );
     }
 
     if (googleButton) {
 
-        googleButton.addEventListener("click", (event) => {
+        googleButton.addEventListener(
+            "click",
+            event => {
 
-            event.preventDefault();
+                event.preventDefault();
 
-            console.log("🔐 Google button clicked");
+                console.log(
+                    "🔐 Google button clicked"
+                );
 
-            loginWithGoogle();
-        });
+                loginWithGoogle();
+            }
+        );
 
     } else {
 
-        console.error("❌ googleLoginBtn not found");
+        console.error(
+            "❌ googleLoginBtn not found"
+        );
     }
 }
 
 /* =========================================================
    GUEST MODE
-========================================================= */
+   ========================================================= */
 
 function enterGuestMode() {
 
@@ -182,12 +200,13 @@ function enterGuestMode() {
 
     currentChatId = "guest";
 
-    localStorage.setItem("codeai_guest", "true");
+    localStorage.setItem(
+        "codeai_guest",
+        "true"
+    );
 
     showApp();
-
     updateAccountUI();
-
     loadGuestChat();
 
     setTimeout(() => {
@@ -203,7 +222,7 @@ function enterGuestMode() {
 
 /* =========================================================
    GOOGLE LOGIN
-========================================================= */
+   ========================================================= */
 
 async function loginWithGoogle() {
 
@@ -246,7 +265,9 @@ async function loginWithGoogle() {
             googleProvider
         );
 
-        console.log("✅ Google sign-in completed");
+        console.log(
+            "✅ Google sign-in completed"
+        );
 
     } catch (error) {
 
@@ -268,7 +289,8 @@ async function loginWithGoogle() {
 
         } else if (
             error &&
-            error.code === "auth/popup-closed-by-user"
+            error.code ===
+                "auth/popup-closed-by-user"
         ) {
 
             message +=
@@ -276,7 +298,8 @@ async function loginWithGoogle() {
 
         } else if (
             error &&
-            error.code === "auth/unauthorized-domain"
+            error.code ===
+                "auth/unauthorized-domain"
         ) {
 
             message +=
@@ -284,7 +307,8 @@ async function loginWithGoogle() {
 
         } else if (
             error &&
-            error.code === "auth/operation-not-allowed"
+            error.code ===
+                "auth/operation-not-allowed"
         ) {
 
             message +=
@@ -316,7 +340,7 @@ async function loginWithGoogle() {
 
 /* =========================================================
    FIREBASE AUTH STATE
-========================================================= */
+   ========================================================= */
 
 function setupAuthState() {
 
@@ -330,11 +354,13 @@ function setupAuthState() {
     }
 
     firebaseAuth.onAuthStateChanged(
-        async (user) => {
+        async user => {
 
             console.log(
                 "Auth state:",
-                user ? user.email : "signed out"
+                user
+                    ? user.email
+                    : "signed out"
             );
 
             if (user) {
@@ -347,19 +373,12 @@ function setupAuthState() {
                 );
 
                 showApp();
-
                 updateAccountUI();
 
                 await loadChatList();
-
                 await loadCloudChat();
 
             } else {
-
-                /*
-                 User is not signed into Google.
-                 We do NOT automatically force guest mode.
-                */
 
                 if (!isGuest) {
                     showGateway();
@@ -371,7 +390,7 @@ function setupAuthState() {
 
 /* =========================================================
    ACCOUNT UI
-========================================================= */
+   ========================================================= */
 
 function updateAccountUI() {
 
@@ -390,7 +409,8 @@ function updateAccountUI() {
         }
 
         if (type) {
-            type.textContent = "Google Account";
+            type.textContent =
+                "Google Account";
         }
 
         if (avatar) {
@@ -420,7 +440,7 @@ function updateAccountUI() {
 
 /* =========================================================
    SIGN OUT
-========================================================= */
+   ========================================================= */
 
 function setupSignOut() {
 
@@ -458,7 +478,6 @@ function setupSignOut() {
 
             currentChatId = null;
             chatHistory = [];
-
             cloudChats = [];
 
             localStorage.removeItem(
@@ -472,7 +491,7 @@ function setupSignOut() {
 
 /* =========================================================
    GUEST CHAT STORAGE
-========================================================= */
+   ========================================================= */
 
 function saveGuestChat() {
 
@@ -542,14 +561,16 @@ function loadGuestChat() {
 }
 
 /* =========================================================
-   CREATE CHAT TITLE
-========================================================= */
+   SMART CHAT TITLE
+   ========================================================= */
 
 function createChatTitle() {
 
     const firstUserMessage =
         chatHistory.find(
-            item => item.role === "user"
+            item =>
+                item &&
+                item.role === "user"
         );
 
     if (!firstUserMessage) {
@@ -557,115 +578,272 @@ function createChatTitle() {
     }
 
     let text =
-        String(firstUserMessage.content || "")
-            .replace(/\[Attached:[^\]]+\]/gi, "")
-            .replace(/\[Attached image\]/gi, "")
-            .replace(/\s+/g, " ")
-            .trim();
+        String(
+            firstUserMessage.content || ""
+        )
+        .replace(
+            /\[Attached:[^\]]+\]/gi,
+            ""
+        )
+        .replace(
+            /\[Attached image\]/gi,
+            ""
+        )
+        .replace(
+            /\s+/g,
+            " "
+        )
+        .trim();
 
     if (!text) {
         return "New Chat";
     }
 
-    const lower = text.toLowerCase();
+    const lower =
+        text.toLowerCase();
 
-    /* Greetings */
+    /* =====================================================
+       GREETINGS
+       ===================================================== */
 
     if (
-        /^(hi|hello|hey|hii|helo|good morning|good afternoon|good evening)\b/.test(lower)
+        /^(hi|hello|hey|hii|helo|yo|sup|namaste|good morning|good afternoon|good evening)\b/
+            .test(lower)
     ) {
-        return "Greeting";
+
+        return "Greetings";
     }
 
-    /* Coding */
+    /* =====================================================
+       CHATBOT CREATION
+       ===================================================== */
 
     if (
-        /code|coding|python|javascript|html|css|java|c\+\+|program|programming|bug|error|debug|website|app|api/.test(lower)
+        /(create|make|build|develop|design|code).*(chatbot|chat bot|ai chatbot|ai assistant)/i
+            .test(lower) ||
+        /(chatbot|chat bot).*(create|make|build|develop|design|code)/i
+            .test(lower)
     ) {
+
+        return "Creating a Chatbot";
+    }
+
+    /* =====================================================
+       WEBSITE CREATION
+       ===================================================== */
+
+    if (
+        /(create|make|build|develop|design).*(website|web site|web app|webpage)/i
+            .test(lower)
+    ) {
+
+        return "Creating a Website";
+    }
+
+    /* =====================================================
+       PYTHON PROJECT
+       ===================================================== */
+
+    if (
+        /python/.test(lower) &&
+        /(create|make|build|code|project|game|program)/.test(lower)
+    ) {
+
+        return "Python Project";
+    }
+
+    /* =====================================================
+       CODING
+       ===================================================== */
+
+    if (
+        /code|coding|program|programming|debug|bug|syntax|javascript|html|css|java|c\+\+|react|node|api/
+            .test(lower)
+    ) {
+
         return "Coding Help";
     }
 
-    /* Math */
+    /* =====================================================
+       MATH
+       ===================================================== */
 
     if (
-        /math|calculate|equation|algebra|geometry|fraction|percentage|prime|factor|multiplication|division/.test(lower)
+        /math|calculate|calculator|equation|algebra|geometry|fraction|percentage|percent|prime|factor|multiplication|division|addition|subtraction|solve.*number/
+            .test(lower)
     ) {
+
         return "Math Help";
     }
 
-    /* Image */
+    /* =====================================================
+       SCIENCE
+       ===================================================== */
 
     if (
-        /image|picture|photo|attached image|analyze this image|camera/.test(lower)
+        /science|physics|chemistry|biology|photosynthesis|gravity|atom|molecule|electricity|force|energy|planet|solar system/
+            .test(lower)
     ) {
+
+        return "Science Help";
+    }
+
+    /* =====================================================
+       IMAGE
+       ===================================================== */
+
+    if (
+        /image|picture|photo|attached image|analyze this image|camera|what do you see/
+            .test(lower)
+    ) {
+
         return "Image Analysis";
     }
 
-    /* PDF / files */
+    /* =====================================================
+       PDF / DOCUMENTS
+       ===================================================== */
 
     if (
-        /pdf|document|file|notes|read this|summarize this document/.test(lower)
+        /pdf|document|file|notes|read this|summarize this document|explain this document/
+            .test(lower)
     ) {
+
         return "Document Help";
     }
 
-    /* YouTube */
+    /* =====================================================
+       YOUTUBE
+       ===================================================== */
 
     if (
-        /youtube|shorts|subscriber|subscribers|channel|video|thumbnail|views/.test(lower)
+        /youtube|shorts|subscriber|subscribers|channel|video|thumbnail|views|youtube studio/
+            .test(lower)
     ) {
+
         return "YouTube Help";
     }
 
-    /* Web project */
+    /* =====================================================
+       FIREBASE
+       ===================================================== */
 
     if (
-        /firebase|firestore|render|vercel|github|hosting|domain|deploy|deployment|frontend|backend/.test(lower)
+        /firebase|firestore|firebase auth|google sign.?in|google login/
+            .test(lower)
     ) {
+
+        return "Firebase Help";
+    }
+
+    /* =====================================================
+       DEPLOYMENT
+       ===================================================== */
+
+    if (
+        /render|vercel|github|hosting|domain|deploy|deployment|frontend|backend|website online/
+            .test(lower)
+    ) {
+
         return "Web Project";
     }
 
-    /* PC */
+    /* =====================================================
+       PC
+       ===================================================== */
 
     if (
-        /computer|pc|windows|laptop|gpu|cpu|graphics|software|driver|nvidia/.test(lower)
+        /computer|pc|windows|laptop|gpu|cpu|graphics|software|driver|nvidia|keyboard|mouse|monitor/
+            .test(lower)
     ) {
+
         return "PC Help";
     }
 
-    /* School */
+    /* =====================================================
+       SCHOOL
+       ===================================================== */
 
     if (
-        /school|homework|question|exam|study|class|chapter|lesson/.test(lower)
+        /school|homework|exam|study|class|chapter|lesson|teacher|question paper/
+            .test(lower)
     ) {
+
         return "School Help";
     }
 
-    /* AI */
+    /* =====================================================
+       AI
+       ===================================================== */
 
     if (
-        /ai|artificial intelligence|chatbot|gemini|gpt|model|llm/.test(lower)
+        /ai|artificial intelligence|chatbot|gemini|gpt|openai|model|llm|machine learning/
+            .test(lower)
     ) {
+
         return "AI Chat";
     }
 
-    /* General title */
+    /* =====================================================
+       MUSIC
+       ===================================================== */
+
+    if (
+        /song|music|mashup|remix|beat|audio/
+            .test(lower)
+    ) {
+
+        return "Music Help";
+    }
+
+    /* =====================================================
+       ROBLOX / GAMING
+       ===================================================== */
+
+    if (
+        /roblox|game|gaming|vehicle legends|grow a garden|dead rails/
+            .test(lower)
+    ) {
+
+        return "Gaming Help";
+    }
+
+    /* =====================================================
+       GENERAL CLEAN TITLE
+       ===================================================== */
 
     let title = text;
 
-    if (title.length > 38) {
+    title = title
+        .replace(
+            /^(please|can you|could you|will you|help me|i want to|i need to)\s+/i,
+            ""
+        )
+        .trim();
+
+    if (!title) {
+        return "New Chat";
+    }
+
+    title =
+        title.charAt(0).toUpperCase() +
+        title.slice(1);
+
+    if (title.length > 42) {
 
         title =
-            title.substring(0, 38).trim() +
+            title
+                .substring(0, 42)
+                .trim() +
             "...";
     }
 
-    return title || "New Chat";
+    return title;
 }
 
 /* =========================================================
    CLEAN HISTORY
-========================================================= */
+   ========================================================= */
 
 function cleanHistory() {
 
@@ -676,14 +854,15 @@ function cleanHistory() {
                     message.role === "user" ||
                     message.role === "assistant"
                 ) &&
-                typeof message.content === "string"
+                typeof message.content ===
+                    "string"
         )
         .slice(-40);
 }
 
 /* =========================================================
    SAVE CLOUD CHAT
-========================================================= */
+   ========================================================= */
 
 async function saveCloudChat() {
 
@@ -710,19 +889,39 @@ async function saveCloudChat() {
                 chats.doc().id;
         }
 
-        const title =
+        const automaticTitle =
             createChatTitle();
+
+        const existingChat =
+            cloudChats.find(
+                chat =>
+                    chat.id ===
+                    currentChatId
+            );
+
+        const finalTitle =
+            existingChat?.customTitle
+                ? existingChat.title
+                : automaticTitle;
 
         await chats
             .doc(currentChatId)
             .set(
                 {
-                    title: title,
+                    title:
+                        finalTitle,
 
-                    messages: cleanHistory(),
+                    customTitle:
+                        existingChat?.customTitle ||
+                        false,
+
+                    messages:
+                        cleanHistory(),
 
                     updatedAt:
-                        firebase.firestore.FieldValue.serverTimestamp()
+                        firebase.firestore
+                            .FieldValue
+                            .serverTimestamp()
                 },
                 {
                     merge: true
@@ -731,7 +930,7 @@ async function saveCloudChat() {
 
         console.log(
             "☁️ Chat saved:",
-            title
+            finalTitle
         );
 
         await loadChatList();
@@ -746,8 +945,8 @@ async function saveCloudChat() {
 }
 
 /* =========================================================
-   LOAD ALL CLOUD CHAT TITLES
-========================================================= */
+   LOAD ALL CLOUD CHATS
+   ========================================================= */
 
 async function loadChatList() {
 
@@ -769,23 +968,30 @@ async function loadChatList() {
                 .get();
 
         cloudChats =
-            snapshot.docs.map(doc => {
+            snapshot.docs.map(
+                doc => {
 
-                const data =
-                    doc.data() || {};
+                    const data =
+                        doc.data() || {};
 
-                return {
-                    id: doc.id,
+                    return {
 
-                    title:
-                        data.title ||
-                        "New Chat",
+                        id: doc.id,
 
-                    updatedAt:
-                        data.updatedAt ||
-                        null
-                };
-            });
+                        title:
+                            data.title ||
+                            "New Chat",
+
+                        customTitle:
+                            data.customTitle ||
+                            false,
+
+                        updatedAt:
+                            data.updatedAt ||
+                            null
+                    };
+                }
+            );
 
         cloudChats.sort(
             (a, b) =>
@@ -811,7 +1017,7 @@ async function loadChatList() {
 
 /* =========================================================
    OPEN SAVED CLOUD CHAT
-========================================================= */
+   ========================================================= */
 
 async function openCloudChat(chatId) {
 
@@ -849,7 +1055,6 @@ async function openCloudChat(chatId) {
                 : [];
 
         renderMessages();
-
         renderChatList();
 
         console.log(
@@ -867,8 +1072,176 @@ async function openCloudChat(chatId) {
 }
 
 /* =========================================================
+   RENAME CHAT
+   ========================================================= */
+
+async function renameCloudChat(chatId) {
+
+    if (
+        !currentUser ||
+        isGuest ||
+        !firebaseDB
+    ) {
+        return;
+    }
+
+    const chat =
+        cloudChats.find(
+            item =>
+                item.id === chatId
+        );
+
+    if (!chat) {
+        return;
+    }
+
+    const newName =
+        prompt(
+            "Enter a new name for this chat:",
+            chat.title
+        );
+
+    if (newName === null) {
+        return;
+    }
+
+    const cleanedName =
+        newName
+            .trim()
+            .replace(/\s+/g, " ");
+
+    if (!cleanedName) {
+
+        alert(
+            "Chat name cannot be empty."
+        );
+
+        return;
+    }
+
+    if (cleanedName.length > 60) {
+
+        alert(
+            "Chat name is too long. Keep it under 60 characters."
+        );
+
+        return;
+    }
+
+    try {
+
+        await firebaseDB
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("chats")
+            .doc(chatId)
+            .update({
+
+                title:
+                    cleanedName,
+
+                customTitle:
+                    true,
+
+                updatedAt:
+                    firebase.firestore
+                        .FieldValue
+                        .serverTimestamp()
+            });
+
+        console.log(
+            "✏️ Chat renamed:",
+            cleanedName
+        );
+
+        await loadChatList();
+
+    } catch (error) {
+
+        console.error(
+            "❌ Rename error:",
+            error
+        );
+
+        alert(
+            "Could not rename this chat."
+        );
+    }
+}
+
+/* =========================================================
+   DELETE CHAT
+   ========================================================= */
+
+async function deleteCloudChat(chatId) {
+
+    if (
+        !currentUser ||
+        isGuest ||
+        !firebaseDB
+    ) {
+        return;
+    }
+
+    const chat =
+        cloudChats.find(
+            item =>
+                item.id === chatId
+        );
+
+    if (!chat) {
+        return;
+    }
+
+    const confirmed =
+        confirm(
+            `Delete "${chat.title}"?\n\nThis chat will be permanently removed from your CodeAI account.`
+        );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+
+        await firebaseDB
+            .collection("users")
+            .doc(currentUser.uid)
+            .collection("chats")
+            .doc(chatId)
+            .delete();
+
+        console.log(
+            "🗑️ Chat deleted:",
+            chat.title
+        );
+
+        if (currentChatId === chatId) {
+
+            currentChatId = null;
+            chatHistory = [];
+
+            renderMessages();
+        }
+
+        await loadChatList();
+
+    } catch (error) {
+
+        console.error(
+            "❌ Delete error:",
+            error
+        );
+
+        alert(
+            "Could not delete this chat."
+        );
+    }
+}
+
+/* =========================================================
    RENDER CHAT LIST
-========================================================= */
+   ========================================================= */
 
 function renderChatList() {
 
@@ -881,7 +1254,6 @@ function renderChatList() {
     list.innerHTML = "";
 
     if (!currentUser || isGuest) {
-
         return;
     }
 
@@ -906,6 +1278,26 @@ function renderChatList() {
 
     cloudChats.forEach(chat => {
 
+        const row =
+            document.createElement("div");
+
+        row.className =
+            "saved-chat-row";
+
+        row.style.display =
+            "flex";
+
+        row.style.alignItems =
+            "center";
+
+        row.style.width =
+            "100%";
+
+        row.style.marginBottom =
+            "4px";
+
+        /* CHAT BUTTON */
+
         const button =
             document.createElement("button");
 
@@ -917,6 +1309,12 @@ function renderChatList() {
 
         button.textContent =
             chat.title;
+
+        button.style.flex =
+            "1";
+
+        button.style.minWidth =
+            "0";
 
         button.style.width =
             "100%";
@@ -942,11 +1340,21 @@ function renderChatList() {
         button.style.borderRadius =
             "8px";
 
+        button.style.overflow =
+            "hidden";
+
+        button.style.textOverflow =
+            "ellipsis";
+
+        button.style.whiteSpace =
+            "nowrap";
+
         button.title =
             chat.title;
 
         if (
-            chat.id === currentChatId
+            chat.id ===
+            currentChatId
         ) {
 
             button.style.background =
@@ -960,19 +1368,261 @@ function renderChatList() {
                 openCloudChat(
                     chat.id
                 );
-
             }
         );
 
-        list.appendChild(
-            button
+        /* THREE DOT MENU */
+
+        const menuButton =
+            document.createElement("button");
+
+        menuButton.type =
+            "button";
+
+        menuButton.textContent =
+            "⋮";
+
+        menuButton.className =
+            "chat-menu-button";
+
+        menuButton.title =
+            "Chat options";
+
+        menuButton.style.width =
+            "36px";
+
+        menuButton.style.height =
+            "36px";
+
+        menuButton.style.flex =
+            "0 0 36px";
+
+        menuButton.style.background =
+            "transparent";
+
+        menuButton.style.border =
+            "0";
+
+        menuButton.style.color =
+            "inherit";
+
+        menuButton.style.cursor =
+            "pointer";
+
+        menuButton.style.borderRadius =
+            "8px";
+
+        menuButton.style.fontSize =
+            "20px";
+
+        menuButton.addEventListener(
+            "click",
+            event => {
+
+                event.stopPropagation();
+
+                showChatMenu(
+                    chat,
+                    menuButton
+                );
+            }
         );
+
+        row.appendChild(button);
+        row.appendChild(menuButton);
+
+        list.appendChild(row);
     });
 }
 
 /* =========================================================
+   CHAT MENU
+   ========================================================= */
+
+function showChatMenu(
+    chat,
+    anchor
+) {
+
+    closeChatMenus();
+
+    const menu =
+        document.createElement("div");
+
+    menu.className =
+        "codeai-chat-menu";
+
+    menu.style.position =
+        "fixed";
+
+    menu.style.zIndex =
+        "99999";
+
+    menu.style.background =
+        "#171717";
+
+    menu.style.border =
+        "1px solid rgba(255,255,255,0.12)";
+
+    menu.style.borderRadius =
+        "10px";
+
+    menu.style.padding =
+        "5px";
+
+    menu.style.minWidth =
+        "150px";
+
+    menu.style.boxShadow =
+        "0 10px 30px rgba(0,0,0,0.45)";
+
+    const rect =
+        anchor.getBoundingClientRect();
+
+    let left =
+        rect.right - 150;
+
+    let top =
+        rect.bottom + 5;
+
+    if (
+        left < 8
+    ) {
+        left = 8;
+    }
+
+    if (
+        top + 100 >
+        window.innerHeight
+    ) {
+
+        top =
+            rect.top - 105;
+    }
+
+    menu.style.left =
+        `${left}px`;
+
+    menu.style.top =
+        `${top}px`;
+
+    /* RENAME */
+
+    const rename =
+        document.createElement("button");
+
+    rename.textContent =
+        "✏️ Rename";
+
+    styleMenuItem(rename);
+
+    rename.addEventListener(
+        "click",
+        () => {
+
+            menu.remove();
+
+            renameCloudChat(
+                chat.id
+            );
+        }
+    );
+
+    /* DELETE */
+
+    const remove =
+        document.createElement("button");
+
+    remove.textContent =
+        "🗑️ Delete";
+
+    styleMenuItem(
+        remove,
+        true
+    );
+
+    remove.addEventListener(
+        "click",
+        () => {
+
+            menu.remove();
+
+            deleteCloudChat(
+                chat.id
+            );
+        }
+    );
+
+    menu.appendChild(rename);
+    menu.appendChild(remove);
+
+    document.body.appendChild(menu);
+
+    setTimeout(() => {
+
+        document.addEventListener(
+            "click",
+            closeChatMenus,
+            {
+                once: true
+            }
+        );
+
+    }, 0);
+}
+
+function styleMenuItem(
+    button,
+    danger = false
+) {
+
+    button.style.display =
+        "block";
+
+    button.style.width =
+        "100%";
+
+    button.style.padding =
+        "9px 12px";
+
+    button.style.border =
+        "0";
+
+    button.style.borderRadius =
+        "7px";
+
+    button.style.background =
+        "transparent";
+
+    button.style.color =
+        danger
+            ? "#ff6b6b"
+            : "#ffffff";
+
+    button.style.textAlign =
+        "left";
+
+    button.style.cursor =
+        "pointer";
+
+    button.style.fontSize =
+        "14px";
+}
+
+function closeChatMenus() {
+
+    document
+        .querySelectorAll(
+            ".codeai-chat-menu"
+        )
+        .forEach(menu => {
+            menu.remove();
+        });
+}
+
+/* =========================================================
    LOAD NEWEST CLOUD CHAT
-========================================================= */
+   ========================================================= */
 
 async function loadCloudChat() {
 
@@ -1021,10 +1671,12 @@ async function loadCloudChat() {
                 newestDoc.data() || {};
 
             const currentTime =
-                current.updatedAt?.seconds || 0;
+                current.updatedAt?.seconds ||
+                0;
 
             const newestTime =
-                newest.updatedAt?.seconds || 0;
+                newest.updatedAt?.seconds ||
+                0;
 
             if (
                 currentTime >
@@ -1044,7 +1696,9 @@ async function loadCloudChat() {
                 newestDoc.id;
 
             chatHistory =
-                Array.isArray(data.messages)
+                Array.isArray(
+                    data.messages
+                )
                     ? data.messages
                     : [];
         }
@@ -1071,7 +1725,7 @@ async function loadCloudChat() {
 
 /* =========================================================
    CHAT SETUP
-========================================================= */
+   ========================================================= */
 
 function setupChat() {
 
@@ -1129,12 +1783,11 @@ function setupChat() {
 
 /* =========================================================
    NEW CHAT
-========================================================= */
+   ========================================================= */
 
 function startNewChat() {
 
     chatHistory = [];
-
     currentChatId = null;
 
     const messages =
@@ -1154,7 +1807,6 @@ function startNewChat() {
     clearAttachment();
 
     if (isGuest) {
-
         saveGuestChat();
     }
 
@@ -1172,12 +1824,14 @@ function startNewChat() {
         input.focus();
     }
 
-    console.log("🆕 New chat started");
+    console.log(
+        "🆕 New chat started"
+    );
 }
 
 /* =========================================================
    SEND MESSAGE
-========================================================= */
+   ========================================================= */
 
 async function sendMessage() {
 
@@ -1257,7 +1911,9 @@ async function sendMessage() {
         (
             selectedFile &&
             selectedFile.type &&
-            selectedFile.type.startsWith("image/")
+            selectedFile.type.startsWith(
+                "image/"
+            )
         )
     ) {
 
@@ -1351,7 +2007,9 @@ async function sendMessage() {
 
                     body:
                         JSON.stringify({
-                            message: text,
+
+                            message:
+                                text,
 
                             language:
                                 language,
@@ -1422,7 +2080,7 @@ async function sendMessage() {
 
 /* =========================================================
    ADD MESSAGE
-========================================================= */
+   ========================================================= */
 
 function addMessage(
     role,
@@ -1483,7 +2141,7 @@ function addMessage(
 
 /* =========================================================
    RENDER SAVED MESSAGES
-========================================================= */
+   ========================================================= */
 
 function renderMessages() {
 
@@ -1521,7 +2179,8 @@ function renderMessages() {
             if (
                 !message ||
                 !message.role ||
-                typeof message.content !== "string"
+                typeof message.content !==
+                    "string"
             ) {
                 return;
             }
@@ -1538,7 +2197,7 @@ function renderMessages() {
 
 /* =========================================================
    HIDE WELCOME
-========================================================= */
+   ========================================================= */
 
 function hideWelcome() {
 
@@ -1552,7 +2211,7 @@ function hideWelcome() {
 
 /* =========================================================
    TYPING
-========================================================= */
+   ========================================================= */
 
 function showTyping() {
 
@@ -1606,7 +2265,7 @@ function removeTyping() {
 
 /* =========================================================
    SCROLL
-========================================================= */
+   ========================================================= */
 
 function scrollToBottom() {
 
@@ -1627,7 +2286,7 @@ function scrollToBottom() {
 
 /* =========================================================
    AUTO RESIZE
-========================================================= */
+   ========================================================= */
 
 function autoResize() {
 
@@ -1650,7 +2309,7 @@ function autoResize() {
 
 /* =========================================================
    ATTACHMENTS
-========================================================= */
+   ========================================================= */
 
 function setupAttachments() {
 
@@ -1790,7 +2449,7 @@ function setupAttachments() {
 
 /* =========================================================
    SHOW ATTACHMENT
-========================================================= */
+   ========================================================= */
 
 function showAttachment(
     file,
@@ -1831,7 +2490,7 @@ function showAttachment(
 
 /* =========================================================
    CLEAR ATTACHMENT
-========================================================= */
+   ========================================================= */
 
 function clearAttachment() {
 
@@ -1886,7 +2545,7 @@ function clearAttachment() {
 
 /* =========================================================
    IMAGE / VISION
-========================================================= */
+   ========================================================= */
 
 async function processImage(
     file,
@@ -1930,7 +2589,8 @@ async function processImage(
                     await response.json();
 
                 detail =
-                    errorData.detail || "";
+                    errorData.detail ||
+                    "";
 
             } catch (_) {}
 
@@ -1990,7 +2650,7 @@ async function processImage(
 
 /* =========================================================
    PDF
-========================================================= */
+   ========================================================= */
 
 async function processPDF(
     file,
@@ -2036,12 +2696,10 @@ async function processPDF(
             data.text ||
             "";
 
-        /*
-           The current backend returns extracted PDF
-           content as "content".
-        */
-
-        if (!reply && data.content) {
+        if (
+            !reply &&
+            data.content
+        ) {
 
             const instruction =
                 question ||
@@ -2099,7 +2757,7 @@ async function processPDF(
 
 /* =========================================================
    OTHER FILES
-========================================================= */
+   ========================================================= */
 
 async function processFile(
     file,
@@ -2145,7 +2803,10 @@ async function processFile(
             data.text ||
             "";
 
-        if (!reply && data.content) {
+        if (
+            !reply &&
+            data.content
+        ) {
 
             const instruction =
                 question ||
@@ -2203,7 +2864,7 @@ async function processFile(
 
 /* =========================================================
    SAVE CURRENT CHAT
-========================================================= */
+   ========================================================= */
 
 async function saveCurrentChat() {
 
@@ -2219,7 +2880,7 @@ async function saveCurrentChat() {
 
 /* =========================================================
    MICROPHONE
-========================================================= */
+   ========================================================= */
 
 function setupMicrophone() {
 
@@ -2330,7 +2991,7 @@ function setupMicrophone() {
 
 /* =========================================================
    SUGGESTIONS
-========================================================= */
+   ========================================================= */
 
 function setupSuggestions() {
 
@@ -2342,7 +3003,9 @@ function setupSuggestions() {
     }
 
     document
-        .querySelectorAll(".suggestion")
+        .querySelectorAll(
+            ".suggestion"
+        )
         .forEach(button => {
 
             button.addEventListener(
@@ -2362,7 +3025,7 @@ function setupSuggestions() {
 
 /* =========================================================
    MODE SELECTOR
-========================================================= */
+   ========================================================= */
 
 function setupModeSelector() {
 
@@ -2405,7 +3068,7 @@ function setupModeSelector() {
 
 /* =========================================================
    SIDEBAR
-========================================================= */
+   ========================================================= */
 
 function setupSidebar() {
 
@@ -2435,7 +3098,7 @@ function setupSidebar() {
 
 /* =========================================================
    ABOUT
-========================================================= */
+   ========================================================= */
 
 function setupAbout() {
 
@@ -2463,7 +3126,7 @@ function setupAbout() {
 
 /* =========================================================
    FORMAT AI TEXT
-========================================================= */
+   ========================================================= */
 
 function formatAIText(text) {
 
@@ -2477,30 +3140,60 @@ function formatAIText(text) {
     let value =
         String(text);
 
-    value =
-        escapeHTML(value);
+    /* SAVE CODE BLOCKS BEFORE ESCAPING */
 
-    /*
-       CODE BLOCKS
-    */
+    const codeBlocks = [];
 
     value =
         value.replace(
             /```([a-zA-Z0-9+#._-]*)\n?([\s\S]*?)```/g,
-            function (
+            (
                 match,
                 language,
                 code
-            ) {
+            ) => {
 
-                const lang =
-                    language ||
-                    "code";
+                const index =
+                    codeBlocks.length;
 
-                return `
+                codeBlocks.push({
+                    language:
+                        language ||
+                        "code",
+
+                    code:
+                        code.trim()
+                });
+
+                return `___CODE_BLOCK_${index}___`;
+            }
+        );
+
+    value =
+        escapeHTML(value);
+
+    /* RESTORE CODE BLOCKS */
+
+    codeBlocks.forEach(
+        (block, index) => {
+
+            const safeCode =
+                escapeHTML(
+                    block.code
+                );
+
+            const safeLanguage =
+                escapeHTML(
+                    block.language
+                );
+
+            value =
+                value.replace(
+                    `___CODE_BLOCK_${index}___`,
+                    `
                     <div class="code-block">
                         <div class="code-header">
-                            <span>${lang}</span>
+                            <span>${safeLanguage}</span>
 
                             <button
                                 class="copy-code"
@@ -2510,15 +3203,14 @@ function formatAIText(text) {
                             </button>
                         </div>
 
-                        <pre><code>${code.trim()}</code></pre>
+                        <pre><code>${safeCode}</code></pre>
                     </div>
-                `;
-            }
-        );
+                    `
+                );
+        }
+    );
 
-    /*
-       BOLD
-    */
+    /* BOLD */
 
     value =
         value.replace(
@@ -2526,9 +3218,7 @@ function formatAIText(text) {
             "<strong>$1</strong>"
         );
 
-    /*
-       INLINE CODE
-    */
+    /* INLINE CODE */
 
     value =
         value.replace(
@@ -2536,9 +3226,7 @@ function formatAIText(text) {
             '<code class="inline-code">$1</code>'
         );
 
-    /*
-       NEW LINES
-    */
+    /* NEW LINES */
 
     value =
         value.replace(
@@ -2551,7 +3239,7 @@ function formatAIText(text) {
 
 /* =========================================================
    ESCAPE HTML
-========================================================= */
+   ========================================================= */
 
 function escapeHTML(value) {
 
@@ -2582,7 +3270,7 @@ function escapeHTML(value) {
 
 /* =========================================================
    COPY CODE
-========================================================= */
+   ========================================================= */
 
 async function copyCode(button) {
 
@@ -2633,7 +3321,7 @@ async function copyCode(button) {
 
 /* =========================================================
    GLOBAL FUNCTIONS
-========================================================= */
+   ========================================================= */
 
 window.continueAsGuest =
     enterGuestMode;
@@ -2658,3 +3346,9 @@ window.openCloudChat =
 
 window.loadChatList =
     loadChatList;
+
+window.renameCloudChat =
+    renameCloudChat;
+
+window.deleteCloudChat =
+    deleteCloudChat;
