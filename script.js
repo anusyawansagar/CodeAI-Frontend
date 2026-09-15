@@ -2,7 +2,7 @@
 
 /* =========================================================
    CODEAI FRONTEND
-   FINAL CHAT FIX
+   FINAL AUTH + CHAT + THINKING
    ========================================================= */
 
 const BACKEND_URL = "https://codeai-backend-0y6t.onrender.com";
@@ -21,6 +21,7 @@ let selectedFile = null;
 let selectedImage = null;
 
 let isSending = false;
+let authResolved = false;
 
 /* =========================================================
    ELEMENTS
@@ -77,60 +78,104 @@ const aboutBtn = document.getElementById("aboutBtn");
    ========================================================= */
 
 function showGateway() {
-    gateway.classList.remove("hidden");
-    app.classList.add("hidden");
+    if (gateway) gateway.classList.remove("hidden");
+    if (app) app.classList.add("hidden");
+
+    document.body.classList.add("gateway-active");
 }
 
 function showApp() {
-    gateway.classList.add("hidden");
-    app.classList.remove("hidden");
+    if (!authResolved) return;
+
+    if (gateway) gateway.classList.add("hidden");
+    if (app) app.classList.remove("hidden");
+
+    document.body.classList.remove("gateway-active");
+
+    setTimeout(() => {
+        if (messageInput) messageInput.focus();
+    }, 100);
 }
+
+/* =========================================================
+   IMPORTANT:
+   SHOW LOGIN BEFORE FIREBASE FINISHES CHECKING
+   ========================================================= */
+
+showGateway();
 
 /* =========================================================
    GOOGLE LOGIN
    ========================================================= */
 
-googleLoginBtn.addEventListener("click", async () => {
-    try {
-        googleLoginBtn.disabled = true;
-        googleLoginBtn.textContent = "Opening Google...";
+if (googleLoginBtn) {
+    googleLoginBtn.addEventListener("click", async () => {
+        try {
+            googleLoginBtn.disabled = true;
+            googleLoginBtn.textContent = "Opening Google...";
 
-        await firebaseAuth.signInWithPopup(googleProvider);
+            await firebaseAuth.signInWithPopup(googleProvider);
 
-    } catch (error) {
-        console.error(error);
+        } catch (error) {
+            console.error("Google login error:", error);
 
-        alert(
-            "Google login failed.\n\n" +
-            (error.message || "Unknown error")
-        );
+            let message = "Google login failed.";
 
-        googleLoginBtn.disabled = false;
-        googleLoginBtn.innerHTML =
-            "<span>G</span> Continue with Google";
-    }
-});
+            if (error && error.code) {
+                if (error.code === "auth/unauthorized-domain") {
+                    message =
+                        "This website domain is not authorized in Firebase.\n\n" +
+                        "Add your Vercel domain in:\n" +
+                        "Firebase → Authentication → Settings → Authorized domains";
+                } else if (error.code === "auth/popup-blocked") {
+                    message =
+                        "Google popup was blocked by the browser. Please allow popups for CodeAI.";
+                } else if (error.code === "auth/popup-closed-by-user") {
+                    message = "Google login window was closed.";
+                } else {
+                    message =
+                        "Google login failed.\n\n" +
+                        error.message;
+                }
+            }
+
+            alert(message);
+
+            googleLoginBtn.disabled = false;
+            googleLoginBtn.innerHTML =
+                "<span>G</span> Continue with Google";
+        }
+    });
+}
 
 /* =========================================================
    GUEST LOGIN
    ========================================================= */
 
-guestBtn.addEventListener("click", () => {
-    currentUser = null;
-    isGuest = true;
+if (guestBtn) {
+    guestBtn.addEventListener("click", () => {
+        currentUser = null;
+        isGuest = true;
+        authResolved = true;
 
-    localStorage.setItem("codeai_guest", "true");
+        localStorage.setItem("codeai_guest", "true");
 
-    setupAccountUI();
-    showApp();
-    loadGuestChat();
-});
+        setupAccountUI();
+        showApp();
+        loadGuestChat();
+    });
+}
 
 /* =========================================================
    FIREBASE AUTH
    ========================================================= */
 
 firebaseAuth.onAuthStateChanged(async (user) => {
+
+    /*
+       Firebase is now giving us the real account state.
+    */
+
     if (user) {
         currentUser = user;
         isGuest = false;
@@ -138,26 +183,39 @@ firebaseAuth.onAuthStateChanged(async (user) => {
         localStorage.removeItem("codeai_guest");
 
         setupAccountUI();
+
+        authResolved = true;
         showApp();
 
         await loadCloudChat();
 
     } else {
+
         const guest =
             localStorage.getItem("codeai_guest");
 
         if (guest === "true") {
+
             currentUser = null;
             isGuest = true;
 
             setupAccountUI();
+
+            authResolved = true;
             showApp();
+
             loadGuestChat();
 
         } else {
+
             currentUser = null;
             isGuest = false;
 
+            authResolved = true;
+
+            /*
+               NO LOGIN = NO CHAT APP
+            */
             showGateway();
         }
     }
@@ -168,7 +226,13 @@ firebaseAuth.onAuthStateChanged(async (user) => {
    ========================================================= */
 
 function setupAccountUI() {
+
+    if (!accountName || !accountType || !accountAvatar) {
+        return;
+    }
+
     if (currentUser) {
+
         const name =
             currentUser.displayName ||
             currentUser.email ||
@@ -180,10 +244,25 @@ function setupAccountUI() {
         accountAvatar.textContent =
             name.charAt(0).toUpperCase();
 
+        /*
+           Use Google profile image when available.
+        */
+        if (currentUser.photoURL) {
+            accountAvatar.style.backgroundImage =
+                `url("${currentUser.photoURL}")`;
+
+            accountAvatar.style.backgroundSize = "cover";
+            accountAvatar.style.backgroundPosition = "center";
+            accountAvatar.textContent = "";
+        }
+
     } else {
+
         accountName.textContent = "Guest";
         accountType.textContent = "Guest • Local only";
         accountAvatar.textContent = "G";
+
+        accountAvatar.style.backgroundImage = "";
     }
 }
 
@@ -191,38 +270,53 @@ function setupAccountUI() {
    SIGN OUT
    ========================================================= */
 
-signOutBtn.addEventListener("click", async () => {
-    try {
-        if (currentUser) {
-            await firebaseAuth.signOut();
-        } else {
-            localStorage.removeItem("codeai_guest");
+if (signOutBtn) {
+    signOutBtn.addEventListener("click", async () => {
 
-            currentUser = null;
-            isGuest = false;
-            chatHistory = [];
+        try {
 
-            showGateway();
+            if (currentUser) {
+
+                await firebaseAuth.signOut();
+
+            } else {
+
+                localStorage.removeItem("codeai_guest");
+
+                currentUser = null;
+                isGuest = false;
+                authResolved = true;
+
+                chatHistory = [];
+                currentChatId = null;
+
+                showGateway();
+            }
+
+        } catch (error) {
+
+            console.error("Sign out error:", error);
+
+            alert("Could not sign out.");
         }
-
-    } catch (error) {
-        console.error(error);
-        alert("Could not sign out.");
-    }
-});
+    });
+}
 
 /* =========================================================
    GUEST CHAT
    ========================================================= */
 
 function loadGuestChat() {
+
     currentChatId = "guest";
 
     const saved =
         localStorage.getItem("codeai_guest_chat");
 
     if (saved) {
+
         try {
+
             const parsed = JSON.parse(saved);
 
             chatHistory =
@@ -231,9 +325,12 @@ function loadGuestChat() {
                     : [];
 
         } catch {
+
             chatHistory = [];
         }
+
     } else {
+
         chatHistory = [];
     }
 
@@ -241,12 +338,16 @@ function loadGuestChat() {
 }
 
 function saveGuestChat() {
+
     try {
+
         localStorage.setItem(
             "codeai_guest_chat",
             JSON.stringify(chatHistory)
         );
+
     } catch (error) {
+
         console.error(
             "Guest save error:",
             error
@@ -259,9 +360,11 @@ function saveGuestChat() {
    ========================================================= */
 
 async function loadCloudChat() {
+
     if (!currentUser) return;
 
     try {
+
         const userChats =
             firebaseDB
                 .collection("users")
@@ -275,38 +378,42 @@ async function loadCloudChat() {
                 .get();
 
         if (snapshot.empty) {
+
             chatHistory = [];
 
             currentChatId =
                 userChats.doc().id;
 
         } else {
+
             const doc = snapshot.docs[0];
+            const data = doc.data();
 
             currentChatId = doc.id;
 
-            const data = doc.data();
-
             chatHistory =
                 Array.isArray(data.messages)
-                    ? data.messages
+                    ? data.messages.filter(isValidMessage)
                     : [];
         }
 
         renderHistory();
 
     } catch (error) {
+
         console.error(
             "Cloud chat error:",
             error
         );
 
         chatHistory = [];
+
         renderHistory();
     }
 }
 
 async function saveCloudChat() {
+
     if (!currentUser) return;
 
     const userChats =
@@ -321,11 +428,12 @@ async function saveCloudChat() {
     }
 
     try {
+
         await userChats
             .doc(currentChatId)
             .set(
                 {
-                    messages: chatHistory,
+                    messages: getCleanHistory(),
                     title: createChatTitle(),
                     updatedAt:
                         firebase.firestore.FieldValue.serverTimestamp()
@@ -336,6 +444,7 @@ async function saveCloudChat() {
             );
 
     } catch (error) {
+
         console.error(
             "Cloud save error:",
             error
@@ -348,22 +457,39 @@ async function saveCloudChat() {
    ========================================================= */
 
 function createChatTitle() {
+
     const firstUserMessage =
         chatHistory.find(
-            item => item.role === "user"
+            item =>
+                item &&
+                item.role === "user" &&
+                typeof item.content === "string"
         );
 
-    if (
-        !firstUserMessage ||
-        typeof firstUserMessage.content !== "string"
-    ) {
+    if (!firstUserMessage) {
         return "New Chat";
     }
 
-    return firstUserMessage.content
+    return String(firstUserMessage.content)
         .replace(/\s+/g, " ")
         .trim()
         .slice(0, 60) || "New Chat";
+}
+
+/* =========================================================
+   MESSAGE VALIDATION
+   ========================================================= */
+
+function isValidMessage(item) {
+
+    return (
+        item &&
+        (
+            item.role === "user" ||
+            item.role === "assistant"
+        ) &&
+        typeof item.content === "string"
+    );
 }
 
 /* =========================================================
@@ -371,31 +497,30 @@ function createChatTitle() {
    ========================================================= */
 
 function renderHistory() {
+
+    if (!messages) return;
+
     messages.innerHTML = "";
 
-    if (
-        !Array.isArray(chatHistory) ||
-        chatHistory.length === 0
-    ) {
-        welcome.classList.remove("hidden");
+    const validHistory =
+        Array.isArray(chatHistory)
+            ? chatHistory.filter(isValidMessage)
+            : [];
+
+    if (validHistory.length === 0) {
+
+        if (welcome) {
+            welcome.classList.remove("hidden");
+        }
+
         return;
     }
 
-    welcome.classList.add("hidden");
+    if (welcome) {
+        welcome.classList.add("hidden");
+    }
 
-    for (const item of chatHistory) {
-        if (
-            item.role !== "user" &&
-            item.role !== "assistant"
-        ) {
-            continue;
-        }
-
-        if (
-            typeof item.content !== "string"
-        ) {
-            continue;
-        }
+    for (const item of validHistory) {
 
         addMessageToUI(
             item.role === "user"
@@ -413,10 +538,11 @@ function renderHistory() {
    ========================================================= */
 
 function addMessageToUI(type, content) {
+
     const safeContent =
         typeof content === "string"
             ? content
-            : "";
+            : String(content ?? "");
 
     const row =
         document.createElement("div");
@@ -457,10 +583,11 @@ function addMessageToUI(type, content) {
    ========================================================= */
 
 function addMessage(role, content) {
+
     const safeContent =
         typeof content === "string"
             ? content
-            : "";
+            : String(content ?? "");
 
     chatHistory.push({
         role: role,
@@ -476,14 +603,57 @@ function addMessage(role, content) {
 }
 
 /* =========================================================
+   THINKING BUBBLE
+   ========================================================= */
+
+function createThinkingBubble() {
+
+    const row =
+        document.createElement("div");
+
+    row.className =
+        "message-row ai thinking-row";
+
+    const avatar =
+        document.createElement("div");
+
+    avatar.className =
+        "message-avatar";
+
+    avatar.textContent = "C";
+
+    const bubble =
+        document.createElement("div");
+
+    bubble.className =
+        "message-bubble thinking";
+
+    bubble.innerHTML = `
+        <span></span>
+        <span></span>
+        <span></span>
+    `;
+
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+
+    messages.appendChild(row);
+
+    scrollToBottom();
+
+    return row;
+}
+
+/* =========================================================
    SEND MESSAGE
    ========================================================= */
 
 async function sendMessage() {
+
     if (isSending) return;
 
     const text =
-        messageInput.value.trim();
+        String(messageInput?.value || "").trim();
 
     if (
         !text &&
@@ -494,19 +664,26 @@ async function sendMessage() {
     }
 
     isSending = true;
-    sendBtn.disabled = true;
 
-    welcome.classList.add("hidden");
+    if (sendBtn) {
+        sendBtn.disabled = true;
+    }
+
+    if (welcome) {
+        welcome.classList.add("hidden");
+    }
 
     let displayText = text;
 
     if (selectedImage) {
+
         displayText =
             text
                 ? `${text}\n\n[Image attached]`
                 : "[Image attached]";
 
     } else if (selectedFile) {
+
         displayText =
             text
                 ? `${text}\n\n[File: ${selectedFile.name}]`
@@ -521,47 +698,19 @@ async function sendMessage() {
     messageInput.value = "";
     autoResize();
 
+    /*
+       SHOW THINKING IMMEDIATELY
+    */
+
     const thinkingRow =
-        document.createElement("div");
-
-    thinkingRow.className =
-        "message-row ai";
-
-    const thinkingAvatar =
-        document.createElement("div");
-
-    thinkingAvatar.className =
-        "message-avatar";
-
-    thinkingAvatar.textContent = "C";
-
-    const thinkingBubble =
-        document.createElement("div");
-
-    thinkingBubble.className =
-        "message-bubble thinking";
-
-    thinkingBubble.innerHTML =
-        "<span></span><span></span><span></span>";
-
-    thinkingRow.appendChild(
-        thinkingAvatar
-    );
-
-    thinkingRow.appendChild(
-        thinkingBubble
-    );
-
-    messages.appendChild(
-        thinkingRow
-    );
-
-    scrollToBottom();
+        createThinkingBubble();
 
     try {
+
         let answer = "";
 
         if (selectedImage) {
+
             answer =
                 await sendVisionRequest(
                     text,
@@ -569,6 +718,7 @@ async function sendMessage() {
                 );
 
         } else if (selectedFile) {
+
             const fileText =
                 await readBrowserFile(
                     selectedFile
@@ -585,24 +735,23 @@ async function sendMessage() {
                 );
 
         } else {
+
             answer =
-                await sendChatRequest(
-                    text
-                );
+                await sendChatRequest(text);
         }
 
         /*
-         * IMPORTANT:
-         * Always force the answer to be a string.
-         * This prevents the replaceAll/replace errors.
-         */
+           ALWAYS FORCE ANSWER TO STRING
+        */
 
         if (
-            typeof answer !== "string"
+            answer === null ||
+            answer === undefined
         ) {
-            answer =
-                String(answer ?? "");
+            answer = "";
         }
+
+        answer = String(answer);
 
         if (!answer.trim()) {
             answer =
@@ -628,6 +777,7 @@ async function sendMessage() {
         }
 
     } catch (error) {
+
         console.error(
             "CodeAI request error:",
             error
@@ -640,7 +790,7 @@ async function sendMessage() {
             (
                 error &&
                 error.message
-                    ? error.message
+                    ? String(error.message)
                     : "Please try again."
             );
 
@@ -661,10 +811,14 @@ async function sendMessage() {
         }
 
     } finally {
+
         clearAttachment();
 
         isSending = false;
-        sendBtn.disabled = false;
+
+        if (sendBtn) {
+            sendBtn.disabled = false;
+        }
 
         scrollToBottom();
     }
@@ -675,6 +829,7 @@ async function sendMessage() {
    ========================================================= */
 
 async function sendChatRequest(text) {
+
     const response =
         await fetch(
             `${BACKEND_URL}/chat`,
@@ -687,9 +842,9 @@ async function sendChatRequest(text) {
                 },
 
                 body: JSON.stringify({
-                    message: text,
+                    message: String(text || ""),
                     language:
-                        languageSelect.value,
+                        languageSelect?.value || "General",
                     history:
                         getCleanHistory()
                 })
@@ -705,9 +860,12 @@ async function sendChatRequest(text) {
     }
 
     if (!response.ok) {
+
         throw new Error(
-            data.detail ||
-            `Backend error: ${response.status}`
+            String(
+                data.detail ||
+                `Backend error: ${response.status}`
+            )
         );
     }
 
@@ -717,9 +875,7 @@ async function sendChatRequest(text) {
         data.message ??
         "";
 
-    return typeof answer === "string"
-        ? answer
-        : String(answer);
+    return String(answer ?? "");
 }
 
 /* =========================================================
@@ -730,6 +886,7 @@ async function sendVisionRequest(
     text,
     imageFile
 ) {
+
     const base64 =
         await fileToBase64(
             imageFile
@@ -748,8 +905,10 @@ async function sendVisionRequest(
 
                 body: JSON.stringify({
                     message:
-                        text ||
-                        "Describe and analyze this image.",
+                        String(
+                            text ||
+                            "Describe and analyze this image."
+                        ),
 
                     image:
                         base64
@@ -766,9 +925,12 @@ async function sendVisionRequest(
     }
 
     if (!response.ok) {
+
         throw new Error(
-            data.detail ||
-            `Vision error: ${response.status}`
+            String(
+                data.detail ||
+                `Vision error: ${response.status}`
+            )
         );
     }
 
@@ -778,9 +940,7 @@ async function sendVisionRequest(
         data.message ??
         "";
 
-    return typeof answer === "string"
-        ? answer
-        : String(answer);
+    return String(answer ?? "");
 }
 
 /* =========================================================
@@ -788,6 +948,7 @@ async function sendVisionRequest(
    ========================================================= */
 
 async function readBrowserFile(file) {
+
     if (
         file.type &&
         file.type.startsWith("text/")
@@ -796,7 +957,7 @@ async function readBrowserFile(file) {
     }
 
     const extension =
-        file.name
+        String(file.name || "")
             .split(".")
             .pop()
             .toLowerCase();
@@ -822,9 +983,7 @@ async function readBrowserFile(file) {
     ];
 
     if (
-        textExtensions.includes(
-            extension
-        )
+        textExtensions.includes(extension)
     ) {
         return await file.text();
     }
@@ -842,24 +1001,31 @@ async function readBrowserFile(file) {
    ========================================================= */
 
 function fileToBase64(file) {
+
     return new Promise(
         (resolve, reject) => {
+
             const reader =
                 new FileReader();
 
             reader.onload = () => {
+
                 const result =
-                    String(reader.result || "");
+                    String(
+                        reader.result || ""
+                    );
 
                 const comma =
                     result.indexOf(",");
 
                 if (comma === -1) {
+
                     reject(
                         new Error(
                             "Could not read image."
                         )
                     );
+
                     return;
                 }
 
@@ -887,79 +1053,100 @@ function fileToBase64(file) {
    ATTACH FILE
    ========================================================= */
 
-attachBtn.addEventListener(
-    "click",
-    () => fileInput.click()
-);
+if (attachBtn) {
 
-fileInput.addEventListener(
-    "change",
-    () => {
-        const file =
-            fileInput.files[0];
+    attachBtn.addEventListener(
+        "click",
+        () => fileInput?.click()
+    );
+}
 
-        if (!file) return;
+if (fileInput) {
 
-        if (
-            file.type &&
-            file.type.startsWith("image/")
-        ) {
-            selectedImage = file;
-            selectedFile = null;
-        } else {
-            selectedFile = file;
-            selectedImage = null;
+    fileInput.addEventListener(
+        "change",
+        () => {
+
+            const file =
+                fileInput.files?.[0];
+
+            if (!file) return;
+
+            if (
+                file.type &&
+                file.type.startsWith("image/")
+            ) {
+
+                selectedImage = file;
+                selectedFile = null;
+
+            } else {
+
+                selectedFile = file;
+                selectedImage = null;
+            }
+
+            showAttachment(file);
         }
-
-        showAttachment(file);
-    }
-);
+    );
+}
 
 /* =========================================================
    CAMERA
    ========================================================= */
 
-cameraBtn.addEventListener(
-    "click",
-    () => cameraInput.click()
-);
+if (cameraBtn) {
 
-cameraInput.addEventListener(
-    "change",
-    () => {
-        const file =
-            cameraInput.files[0];
+    cameraBtn.addEventListener(
+        "click",
+        () => cameraInput?.click()
+    );
+}
 
-        if (!file) return;
+if (cameraInput) {
 
-        selectedImage = file;
-        selectedFile = null;
+    cameraInput.addEventListener(
+        "change",
+        () => {
 
-        showAttachment(
-            file,
-            true
-        );
-    }
-);
+            const file =
+                cameraInput.files?.[0];
+
+            if (!file) return;
+
+            selectedImage = file;
+            selectedFile = null;
+
+            showAttachment(
+                file,
+                true
+            );
+        }
+    );
+}
 
 /* =========================================================
    IMAGE INPUT
    ========================================================= */
 
-imageInput.addEventListener(
-    "change",
-    () => {
-        const file =
-            imageInput.files[0];
+if (imageInput) {
 
-        if (!file) return;
+    imageInput.addEventListener(
+        "change",
+        () => {
 
-        selectedImage = file;
-        selectedFile = null;
+            const file =
+                imageInput.files?.[0];
 
-        showAttachment(file);
-    }
-);
+            if (!file) return;
+
+            selectedImage = file;
+            selectedFile = null;
+
+            showAttachment(file);
+        }
+    );
+}
 
 /* =========================================================
    ATTACHMENT PREVIEW
@@ -969,6 +1156,9 @@ function showAttachment(
     file,
     camera = false
 ) {
+
+    if (!attachmentPreview) return;
+
     attachmentPreview.classList.remove(
         "hidden"
     );
@@ -976,33 +1166,39 @@ function showAttachment(
     attachmentName.textContent =
         camera
             ? "Camera photo"
-            : file.name;
+            : String(file.name || "Attachment");
 
     attachmentType.textContent =
-        file.type ||
-        "Attachment";
+        String(file.type || "Attachment");
 }
 
 /* =========================================================
    CLEAR ATTACHMENT
    ========================================================= */
 
-removeAttachmentBtn.addEventListener(
-    "click",
-    clearAttachment
-);
+if (removeAttachmentBtn) {
+
+    removeAttachmentBtn.addEventListener(
+        "click",
+        clearAttachment
+    );
+}
 
 function clearAttachment() {
+
     selectedFile = null;
     selectedImage = null;
 
-    fileInput.value = "";
-    cameraInput.value = "";
-    imageInput.value = "";
+    if (fileInput) fileInput.value = "";
+    if (cameraInput) cameraInput.value = "";
+    if (imageInput) imageInput.value = "";
 
-    attachmentPreview.classList.add(
-        "hidden"
-    );
+    if (attachmentPreview) {
+
+        attachmentPreview.classList.add(
+            "hidden"
+        );
+    }
 }
 
 /* =========================================================
@@ -1013,6 +1209,7 @@ async function createPDF(
     title,
     content
 ) {
+
     const response =
         await fetch(
             `${BACKEND_URL}/create-pdf`,
@@ -1036,6 +1233,7 @@ async function createPDF(
         );
 
     if (!response.ok) {
+
         let data = {};
 
         try {
@@ -1043,8 +1241,10 @@ async function createPDF(
         } catch {}
 
         throw new Error(
-            data.detail ||
-            `PDF creation failed: ${response.status}`
+            String(
+                data.detail ||
+                `PDF creation failed: ${response.status}`
+            )
         );
     }
 
@@ -1070,7 +1270,10 @@ async function createPDF(
 
     a.remove();
 
-    URL.revokeObjectURL(url);
+    setTimeout(
+        () => URL.revokeObjectURL(url),
+        1000
+    );
 }
 
 /* =========================================================
@@ -1078,77 +1281,101 @@ async function createPDF(
    ========================================================= */
 
 function getCleanHistory() {
+
     return chatHistory
-        .filter(
-            item =>
-                (
-                    item.role === "user" ||
-                    item.role === "assistant"
-                ) &&
-                typeof item.content === "string"
-        )
-        .slice(-40);
+        .filter(isValidMessage)
+        .slice(-40)
+        .map(item => ({
+            role: item.role,
+            content: String(item.content)
+        }));
 }
 
 /* =========================================================
    NEW CHAT
    ========================================================= */
 
-newChatBtn.addEventListener(
-    "click",
-    async () => {
-        chatHistory = [];
+if (newChatBtn) {
 
-        messages.innerHTML = "";
+    newChatBtn.addEventListener(
+        "click",
+        async () => {
 
-        welcome.classList.remove(
-            "hidden"
-        );
+            chatHistory = [];
 
-        clearAttachment();
+            messages.innerHTML = "";
 
-        if (currentUser) {
-            currentChatId =
-                firebaseDB
-                    .collection("users")
-                    .doc(currentUser.uid)
-                    .collection("chats")
-                    .doc().id;
-        } else {
-            currentChatId = "guest";
-            saveGuestChat();
+            if (welcome) {
+                welcome.classList.remove(
+                    "hidden"
+                );
+            }
+
+            clearAttachment();
+
+            if (currentUser) {
+
+                currentChatId =
+                    firebaseDB
+                        .collection("users")
+                        .doc(currentUser.uid)
+                        .collection("chats")
+                        .doc().id;
+
+            } else {
+
+                currentChatId = "guest";
+
+                saveGuestChat();
+            }
+
+            if (messageInput) {
+                messageInput.focus();
+            }
         }
-    }
-);
+    );
+}
 
 /* =========================================================
    INPUT
    ========================================================= */
 
-sendBtn.addEventListener(
-    "click",
-    sendMessage
-);
+if (sendBtn) {
 
-messageInput.addEventListener(
-    "keydown",
-    event => {
-        if (
-            event.key === "Enter" &&
-            !event.shiftKey
-        ) {
-            event.preventDefault();
-            sendMessage();
+    sendBtn.addEventListener(
+        "click",
+        sendMessage
+    );
+}
+
+if (messageInput) {
+
+    messageInput.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key === "Enter" &&
+                !event.shiftKey
+            ) {
+
+                event.preventDefault();
+
+                sendMessage();
+            }
         }
-    }
-);
+    );
 
-messageInput.addEventListener(
-    "input",
-    autoResize
-);
+    messageInput.addEventListener(
+        "input",
+        autoResize
+    );
+}
 
 function autoResize() {
+
+    if (!messageInput) return;
+
     messageInput.style.height = "auto";
 
     messageInput.style.height =
@@ -1165,11 +1392,15 @@ function autoResize() {
 document
     .querySelectorAll(".suggestion")
     .forEach(button => {
+
         button.addEventListener(
             "click",
             () => {
+
                 messageInput.value =
-                    button.textContent.trim();
+                    String(
+                        button.textContent || ""
+                    ).trim();
 
                 autoResize();
 
@@ -1182,54 +1413,69 @@ document
    MODE
    ========================================================= */
 
-languageSelect.addEventListener(
-    "change",
-    () => {
-        const mode =
-            languageSelect.value;
+if (languageSelect) {
 
-        messageInput.placeholder =
-            mode !== "General"
-                ? `Ask CodeAI about ${mode}...`
-                : "Ask CodeAI anything...";
-    }
-);
+    languageSelect.addEventListener(
+        "change",
+        () => {
+
+            const mode =
+                languageSelect.value;
+
+            messageInput.placeholder =
+                mode !== "General"
+                    ? `Ask CodeAI about ${mode}...`
+                    : "Ask CodeAI anything...";
+        }
+    );
+}
 
 /* =========================================================
    MOBILE SIDEBAR
    ========================================================= */
 
-menuBtn.addEventListener(
-    "click",
-    () => {
-        sidebar.classList.toggle(
-            "open"
-        );
-    }
-);
+if (menuBtn) {
+
+    menuBtn.addEventListener(
+        "click",
+        () => {
+
+            if (sidebar) {
+                sidebar.classList.toggle(
+                    "open"
+                );
+            }
+        }
+    );
+}
 
 /* =========================================================
    ABOUT
    ========================================================= */
 
-aboutBtn.addEventListener(
-    "click",
-    () => {
-        alert(
-            "CodeAI\n\n" +
-            "A free general-purpose AI assistant.\n\n" +
-            "Creator:\n" +
-            "VARAD WANSAGAR sir created me.\n\n" +
-            "Free mode: No subscriptions, no ads and no payments."
-        );
-    }
-);
+if (aboutBtn) {
+
+    aboutBtn.addEventListener(
+        "click",
+        () => {
+
+            alert(
+                "CodeAI\n\n" +
+                "A free general-purpose AI assistant.\n\n" +
+                "Creator:\n" +
+                "VARAD WANSAGAR sir created me.\n\n" +
+                "Free mode: No subscriptions, no ads and no payments."
+            );
+        }
+    );
+}
 
 /* =========================================================
    FORMAT AI TEXT
    ========================================================= */
 
 function formatAIText(text) {
+
     if (
         text === null ||
         text === undefined
@@ -1240,25 +1486,25 @@ function formatAIText(text) {
     let value =
         String(text);
 
-    /*
-     * Escape HTML first.
-     */
     let escaped =
         escapeHTML(value);
 
     /*
-     * Code blocks.
-     */
+       Code blocks
+    */
+
     escaped =
         escaped.replace(
             /```([a-zA-Z0-9+#.-]*)\n?([\s\S]*?)```/g,
             (match, language, code) => {
+
                 const cleanCode =
                     String(code || "").trim();
 
                 const lang =
-                    language ||
-                    "code";
+                    String(
+                        language || "code"
+                    );
 
                 return `
                     <div class="code-block">
@@ -1279,8 +1525,9 @@ function formatAIText(text) {
         );
 
     /*
-     * Bold.
-     */
+       Bold
+    */
+
     escaped =
         escaped.replace(
             /\*\*(.*?)\*\*/g,
@@ -1288,8 +1535,9 @@ function formatAIText(text) {
         );
 
     /*
-     * Inline code.
-     */
+       Inline code
+    */
+
     escaped =
         escaped.replace(
             /`([^`]+)`/g,
@@ -1297,8 +1545,9 @@ function formatAIText(text) {
         );
 
     /*
-     * Newlines.
-     */
+       New lines
+    */
+
     escaped =
         escaped.replace(
             /\n/g,
@@ -1313,6 +1562,7 @@ function formatAIText(text) {
    ========================================================= */
 
 function escapeHTML(value) {
+
     return String(value ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -1327,8 +1577,9 @@ function escapeHTML(value) {
 
 window.copyCode =
     async function(button) {
+
         const block =
-            button.closest(".code-block");
+            button?.closest(".code-block");
 
         if (!block) return;
 
@@ -1341,6 +1592,7 @@ window.copyCode =
             codeElement.innerText || "";
 
         try {
+
             await navigator.clipboard.writeText(
                 code
             );
@@ -1357,6 +1609,7 @@ window.copyCode =
             );
 
         } catch {
+
             alert(
                 "Couldn't copy the code."
             );
@@ -1368,6 +1621,7 @@ window.copyCode =
    ========================================================= */
 
 function scrollToBottom() {
+
     const chat =
         document.getElementById(
             "chatArea"
@@ -1375,8 +1629,11 @@ function scrollToBottom() {
 
     if (!chat) return;
 
-    chat.scrollTop =
-        chat.scrollHeight;
+    requestAnimationFrame(() => {
+
+        chat.scrollTop =
+            chat.scrollHeight;
+    });
 }
 
 /* =========================================================
@@ -1384,6 +1641,7 @@ function scrollToBottom() {
    ========================================================= */
 
 function formatBytes(bytes) {
+
     if (!bytes) return "0 B";
 
     const units = [
@@ -1418,6 +1676,7 @@ function formatBytes(bytes) {
 }
 
 function safeFilename(name) {
+
     return String(name || "CodeAI")
         .replace(
             /[^a-z0-9-_ ]/gi,
@@ -1440,19 +1699,25 @@ let mediaRecorder = null;
 let audioChunks = [];
 let recording = false;
 
-micBtn.addEventListener(
-    "click",
-    async () => {
-        if (recording) {
-            stopRecording();
-        } else {
-            await startRecording();
+if (micBtn) {
+
+    micBtn.addEventListener(
+        "click",
+        async () => {
+
+            if (recording) {
+                stopRecording();
+            } else {
+                await startRecording();
+            }
         }
-    }
-);
+    );
+}
 
 async function startRecording() {
+
     try {
+
         const stream =
             await navigator.mediaDevices.getUserMedia({
                 audio: true
@@ -1465,10 +1730,12 @@ async function startRecording() {
 
         mediaRecorder.ondataavailable =
             event => {
+
                 if (
                     event.data &&
                     event.data.size > 0
                 ) {
+
                     audioChunks.push(
                         event.data
                     );
@@ -1477,6 +1744,7 @@ async function startRecording() {
 
         mediaRecorder.onstop =
             async () => {
+
                 stream
                     .getTracks()
                     .forEach(
@@ -1504,8 +1772,8 @@ async function startRecording() {
 
         micBtn.textContent =
             "⏹";
-
     } catch (error) {
+
         console.error(error);
 
         alert(
@@ -1515,10 +1783,12 @@ async function startRecording() {
 }
 
 function stopRecording() {
+
     if (
         mediaRecorder &&
         recording
     ) {
+
         mediaRecorder.stop();
 
         recording = false;
@@ -1535,7 +1805,9 @@ function stopRecording() {
 async function transcribeAudio(
     audioBlob
 ) {
+
     try {
+
         const formData =
             new FormData();
 
@@ -1563,18 +1835,24 @@ async function transcribeAudio(
         }
 
         if (!response.ok) {
+
             throw new Error(
-                data.detail ||
-                `Transcription error: ${response.status}`
+                String(
+                    data.detail ||
+                    `Transcription error: ${response.status}`
+                )
             );
         }
 
         const text =
-            data.text ||
-            data.transcription ||
-            "";
+            String(
+                data.text ||
+                data.transcription ||
+                ""
+            );
 
         if (text) {
+
             messageInput.value =
                 text;
 
@@ -1584,6 +1862,7 @@ async function transcribeAudio(
         }
 
     } catch (error) {
+
         console.error(error);
 
         alert(
@@ -1593,7 +1872,11 @@ async function transcribeAudio(
 }
 
 /* =========================================================
-   INITIAL
+   FINAL STARTUP
    ========================================================= */
 
+/*
+   Login screen is already visible.
+   Firebase decides what happens next.
+*/
 showGateway();
