@@ -2,331 +2,451 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="CodeAI - Your futuristic AI assistant"
+    >
 
     <title>CodeAI</title>
 
-    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- ================= ACCOUNT GATEWAY ================= -->
+    <!-- ============================= -->
+    <!-- ACCOUNT GATEWAY -->
+    <!-- ============================= -->
 
-<div id="accountGateway" class="gateway">
-    <div class="gateway-box">
+    <section id="accountGateway" class="gateway">
 
-        <div class="gateway-logo">C</div>
+        <div class="gateway-glow glow-one"></div>
+        <div class="gateway-glow glow-two"></div>
 
-        <h1>Welcome to CodeAI</h1>
+        <div class="gateway-box">
 
-        <p>
-            Your free AI assistant for coding, questions, files,
-            images, PDFs and more.
-        </p>
-
-        <button id="googleLoginBtn" class="google-btn">
-            <span>G</span>
-            Continue with Google
-        </button>
-
-        <button id="guestBtn" class="guest-btn">
-            Continue as Guest
-        </button>
-
-        <div class="gateway-note">
-            Google accounts can save chats in the cloud.<br>
-            Guest chats stay on this device.
-        </div>
-
-    </div>
-</div>
-
-
-<!-- ================= MAIN APP ================= -->
-
-<div id="app" class="app hidden">
-
-    <!-- SIDEBAR -->
-
-    <aside class="sidebar" id="sidebar">
-
-        <div class="brand">
-            <div class="brand-logo">C</div>
-
-            <div>
-                <div class="brand-name">CodeAI</div>
-                <div class="brand-subtitle">Free AI Assistant</div>
-            </div>
-        </div>
-
-        <button id="newChatBtn" class="new-chat-btn">
-            ＋ New Chat
-        </button>
-
-        <div class="sidebar-section">
-
-            <div class="section-title">
-                MODE
+            <div class="gateway-logo">
+                <span>V</span>
             </div>
 
-            <select id="languageSelect" class="language-select">
-                <option value="General">General</option>
-                <option value="Python">Python</option>
-                <option value="JavaScript">JavaScript</option>
-                <option value="HTML">HTML</option>
-                <option value="CSS">CSS</option>
-                <option value="C">C</option>
-                <option value="C++">C++</option>
-                <option value="Java">Java</option>
-                <option value="Rust">Rust</option>
-                <option value="SQL">SQL</option>
-            </select>
+            <h1>Welcome to <strong>CodeAI</strong></h1>
 
-        </div>
+            <p class="gateway-description">
+                Your futuristic AI assistant for coding, questions,
+                files, images and more.
+            </p>
 
-        <div class="sidebar-spacer"></div>
-
-        <div class="account-card">
-
-            <div class="account-avatar" id="accountAvatar">
-                G
-            </div>
-
-            <div class="account-details">
-
-                <div id="accountName">
-                    Guest
-                </div>
-
-                <div id="accountType">
-                    Local mode
-                </div>
-
-            </div>
-
-            <button id="signOutBtn" class="signout-btn">
-                ↪
+            <button id="googleLoginBtn" class="google-login-btn">
+                <span class="google-icon">G</span>
+                <span>Continue with Google</span>
             </button>
 
-        </div>
-
-    </aside>
-
-
-    <!-- MAIN -->
-
-    <main class="main">
-
-        <!-- HEADER -->
-
-        <header class="topbar">
-
-            <button id="menuBtn" class="menu-btn">
-                ☰
+            <button id="guestBtn" class="guest-btn">
+                Continue as Guest
             </button>
 
-            <div class="top-title">
-                <span class="status-dot"></span>
-                CodeAI
+            <div class="gateway-divider">
+                <span>or</span>
             </div>
 
-            <div class="top-actions">
+            <p class="gateway-note">
+                Guest chats stay on this device.
+                Sign in with Google to save chats to your account.
+            </p>
 
-                <button id="aboutBtn" class="icon-btn" title="About">
-                    ?
+            <div id="authError" class="auth-error"></div>
+
+        </div>
+    </section>
+
+
+    <!-- ============================= -->
+    <!-- MAIN APP -->
+    <!-- ============================= -->
+
+    <section id="app" class="app hidden">
+
+        <!-- SIDEBAR -->
+
+        <aside class="sidebar">
+
+            <div class="sidebar-top">
+
+                <div class="brand">
+
+                    <div class="brand-logo">
+                        V
+                    </div>
+
+                    <div class="brand-info">
+                        <div class="brand-name">
+                            CodeAI
+                        </div>
+
+                        <div class="brand-subtitle">
+                            AI Assistant
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <button
+                    id="newChatBtn"
+                    class="new-chat-btn"
+                    title="New chat"
+                >
+                    <span>＋</span>
+                    <span>New chat</span>
                 </button>
 
             </div>
 
-        </header>
+
+            <!-- CHAT LIST -->
+
+            <div class="chat-list-title">
+                Your chats
+            </div>
+
+            <div id="chatList" class="chat-list">
+            </div>
 
 
-        <!-- CHAT -->
+            <!-- SIDEBAR BOTTOM -->
 
-        <section class="chat-area" id="chatArea">
+            <div class="sidebar-bottom">
 
-            <div id="welcome" class="welcome">
+                <div class="account-card">
 
-                <div class="welcome-logo">
-                    C
-                </div>
+                    <div class="account-avatar" id="accountAvatar">
+                        G
+                    </div>
 
-                <h1>What can I help you with?</h1>
+                    <div class="account-details">
 
-                <p>
-                    Ask CodeAI anything. Coding, questions,
-                    files, images, PDFs and more.
-                </p>
+                        <div
+                            id="accountName"
+                            class="account-name"
+                        >
+                            Guest
+                        </div>
 
-                <div class="suggestions">
+                        <div
+                            id="accountType"
+                            class="account-type"
+                        >
+                            Guest mode
+                        </div>
 
-                    <button class="suggestion">
-                        Explain quantum computing simply
-                    </button>
+                    </div>
 
-                    <button class="suggestion">
-                        Make a Python calculator
-                    </button>
-
-                    <button class="suggestion">
-                        Create a study plan for me
-                    </button>
-
-                    <button class="suggestion">
-                        Explain this code
+                    <button
+                        id="signOutBtn"
+                        class="sign-out-btn"
+                        title="Sign out"
+                    >
+                        ↪
                     </button>
 
                 </div>
 
             </div>
 
-            <div id="messages"></div>
-
-        </section>
+        </aside>
 
 
-        <!-- ATTACHMENT PREVIEW -->
+        <!-- MAIN CONTENT -->
 
-        <div id="attachmentPreview" class="attachment-preview hidden">
+        <main class="main">
 
-            <div class="attachment-info">
+            <!-- TOP BAR -->
 
-                <div id="attachmentIcon" class="attachment-icon">
+            <header class="topbar">
+
+                <button
+                    id="menuBtn"
+                    class="menu-btn"
+                    title="Menu"
+                >
+                    ☰
+                </button>
+
+                <div class="top-title">
+                    CodeAI
+                </div>
+
+                <div class="topbar-right">
+
+                    <div class="connection-status">
+                        <span class="status-dot"></span>
+                        <span>Online</span>
+                    </div>
+
+                    <button
+                        id="aboutBtn"
+                        class="about-btn"
+                    >
+                        About
+                    </button>
+
+                </div>
+
+            </header>
+
+
+            <!-- CHAT AREA -->
+
+            <section
+                id="chatArea"
+                class="chat-area"
+            >
+
+                <!-- WELCOME -->
+
+                <div
+                    id="welcome"
+                    class="welcome"
+                >
+
+                    <div class="welcome-logo">
+                        V
+                    </div>
+
+                    <h2>
+                        What can I help you with?
+                    </h2>
+
+                    <p>
+                        Ask CodeAI anything.
+                    </p>
+
+                    <div class="quick-actions">
+
+                        <button class="quick-card">
+                            <span>⌘</span>
+                            <strong>Code</strong>
+                            <small>Build and debug code</small>
+                        </button>
+
+                        <button class="quick-card">
+                            <span>✦</span>
+                            <strong>Learn</strong>
+                            <small>Understand difficult topics</small>
+                        </button>
+
+                        <button class="quick-card">
+                            <span>◉</span>
+                            <strong>Analyze</strong>
+                            <small>Work with files and images</small>
+                        </button>
+
+                        <button class="quick-card">
+                            <span>⚡</span>
+                            <strong>Create</strong>
+                            <small>Generate ideas and content</small>
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- MESSAGES -->
+
+                <div id="messages" class="messages">
+                </div>
+
+            </section>
+
+
+            <!-- ATTACHMENT PREVIEW -->
+
+            <div
+                id="attachmentPreview"
+                class="attachment-preview hidden"
+            >
+
+                <div class="attachment-icon">
                     📎
                 </div>
 
-                <div>
-                    <div id="attachmentName">
+                <div class="attachment-info">
+
+                    <div
+                        id="attachmentName"
+                        class="attachment-name"
+                    >
                         File
                     </div>
 
-                    <div id="attachmentType">
-                        Attachment
+                    <div
+                        id="attachmentType"
+                        class="attachment-type"
+                    >
+                        File
                     </div>
+
+                </div>
+
+                <button
+                    id="removeAttachmentBtn"
+                    class="remove-attachment"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <!-- INPUT AREA -->
+
+            <div class="input-wrapper">
+
+                <div class="input-box">
+
+                    <button
+                        id="attachBtn"
+                        class="input-tool"
+                        title="Attach file"
+                    >
+                        +
+                    </button>
+
+                    <button
+                        id="cameraBtn"
+                        class="input-tool"
+                        title="Image"
+                    >
+                        ◉
+                    </button>
+
+                    <button
+                        id="micBtn"
+                        class="input-tool"
+                        title="Voice"
+                    >
+                        🎙
+                    </button>
+
+
+                    <textarea
+                        id="messageInput"
+                        placeholder="Message CodeAI..."
+                        rows="1"
+                        autocomplete="off"
+                    ></textarea>
+
+
+                    <button
+                        id="sendBtn"
+                        class="send-btn"
+                        title="Send"
+                    >
+                        ↑
+                    </button>
+
+                </div>
+
+                <div class="input-footer">
+                    CodeAI can make mistakes. Check important information.
                 </div>
 
             </div>
 
-            <button id="removeAttachmentBtn">
-                ×
-            </button>
 
-        </div>
+            <!-- HIDDEN FILE INPUTS -->
 
+            <input
+                id="fileInput"
+                type="file"
+                hidden
+            >
 
-        <!-- INPUT -->
+            <input
+                id="cameraInput"
+                type="file"
+                accept="image/*"
+                capture="environment"
+                hidden
+            >
 
-        <div class="input-wrapper">
+            <input
+                id="imageInput"
+                type="file"
+                accept="image/*"
+                hidden
+            >
 
-            <div class="input-box">
+        </main>
 
-                <button
-                    id="attachBtn"
-                    class="input-tool"
-                    title="Upload file or image">
-                    ＋
-                </button>
-
-                <button
-                    id="cameraBtn"
-                    class="input-tool"
-                    title="Take a photo">
-                    📷
-                </button>
-
-                <button
-                    id="micBtn"
-                    class="input-tool"
-                    title="Voice input">
-                    🎤
-                </button>
-
-                <textarea
-                    id="messageInput"
-                    rows="1"
-                    placeholder="Ask CodeAI anything..."
-                ></textarea>
-
-                <button
-                    id="sendBtn"
-                    class="send-btn"
-                    title="Send">
-                    ➤
-                </button>
-
-            </div>
-
-            <div class="input-tools-text">
-                Free • No subscriptions • No ads
-            </div>
-
-        </div>
-
-    </main>
-
-</div>
+    </section>
 
 
-<!-- FILE INPUT -->
+    <!-- ============================= -->
+    <!-- FIREBASE -->
+    <!-- ============================= -->
 
-<input
-    type="file"
-    id="fileInput"
-    class="hidden-input"
-    accept="image/*,.txt,.py,.js,.html,.css,.json,.md,.csv,.java,.cpp,.c,.h,.rs,.sql,.xml,.yaml,.yml"
->
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 
-<!-- CAMERA INPUT -->
-
-<input
-    type="file"
-    id="cameraInput"
-    class="hidden-input"
-    accept="image/*"
-    capture="environment"
->
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 
 
-<!-- GENERAL IMAGE INPUT -->
+    <script>
 
-<input
-    type="file"
-    id="imageInput"
-    class="hidden-input"
-    accept="image/*"
->
+        /*
+         * IMPORTANT:
+         * Replace ONLY these Firebase values with the
+         * configuration from:
+         *
+         * Firebase Console
+         * → Project Settings
+         * → General
+         * → Your apps
+         * → Web app
+         * → SDK setup and configuration
+         */
 
-
-<!-- FIREBASE CONFIG -->
-
-<script>
-firebaseConfig = {
-    apiKey:"AIza1ngrV4SBU4zZWPE_XLVKmEM",
-    authDomain:"codeai-caec6.firebaseapp.com",
-    projectId:"codeai-caec6",
-    storageBucket:"codeai-caec6.firebasestorage.app",
-    messagingSenderId:"477069579145",
-    appId:"1:477069579145:web:714e016825ffa9eb4fc758",
-    measurementId:"G-3SJ88SHP7K"
-}
-
-firebase.initializeApp(firebaseConfig);
-
-window.firebaseAuth = firebase.auth();
-window.firebaseDB = firebase.firestore();
-
-window.googleProvider = new firebase.auth.GoogleAuthProvider();
-</script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyB5iThRKm4Y1ngrV4SBU4zZWPE_XLVKmEM",
+            authDomain: "codeai-caec6.firebaseapp.com",
+            projectId: "codeai-caec6",
+            storageBucket: "codeai-caec6.firebasestorage.app",
+            messagingSenderId: "477069579145",
+            appId: "1:477069579145:web:714e016825ffa9eb4fc758"
+        };
 
 
-<script src="script.js"></script>
+        firebase.initializeApp(firebaseConfig);
+
+        const firebaseAuth = firebase.auth();
+        const firestore = firebase.firestore();
+
+        window.firebaseAuth = firebaseAuth;
+        window.firestore = firestore;
+
+    </script>
+
+
+    <!-- MAIN JAVASCRIPT -->
+
+    <script src="script.js"></script>
 
 </body>
 </html>
